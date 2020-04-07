@@ -1,0 +1,11 @@
+packet {
+  payload: "\377\377\377\377\377\377\377\377\377\377\377\377\000\000"
+  metadata {
+    metadata_id: 1   # output port
+    value: "\000\003"
+  }
+  metadata {
+    metadata_id: 3   # mcast id
+    value: "\000\000"
+  }
+}

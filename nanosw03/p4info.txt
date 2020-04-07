@@ -1,0 +1,91 @@
+pkg_info {
+  arch: "v1model"
+}
+tables {
+  preamble {
+    id: 33609159
+    name: "MyIngress.l2_match_table"
+    alias: "l2_match_table"
+  }
+  match_fields {
+    id: 1
+    name: "hdr.ethernet.dstAddr"
+    bitwidth: 48
+    match_type: EXACT
+  }
+  match_fields {
+    id: 2
+    name: "hdr.ethernet.srcAddr"
+    bitwidth: 48
+    match_type: EXACT
+  }
+  action_refs {
+    id: 16838673
+  }
+  action_refs {
+    id: 16803363
+  }
+  size: 1024
+}
+actions {
+  preamble {
+    id: 16838673
+    name: "MyIngress.forward"
+    alias: "forward"
+  }
+  params {
+    id: 1
+    name: "port"
+    bitwidth: 9
+  }
+}
+actions {
+  preamble {
+    id: 16803363
+    name: "MyIngress.to_controller"
+    alias: "to_controller"
+  }
+}
+controller_packet_metadata {
+  preamble {
+    id: 67121543
+    name: "packet_out"
+    alias: "packet_out"
+    annotations: "@controller_header(\"packet_out\")"
+  }
+  metadata {
+    id: 1
+    name: "egress_port"
+    bitwidth: 9
+  }
+  metadata {
+    id: 2
+    name: "_pad"
+    bitwidth: 7
+  }
+  metadata {
+    id: 3
+    name: "mcast_grp"
+    bitwidth: 16
+  }
+}
+controller_packet_metadata {
+  preamble {
+    id: 67146229
+    name: "packet_in"
+    alias: "packet_in"
+    annotations: "@controller_header(\"packet_in\")"
+  }
+  metadata {
+    id: 1
+    name: "ingress_port"
+    bitwidth: 9
+  }
+  metadata {
+    id: 2
+    name: "_pad"
+    bitwidth: 7
+  }
+}
+type_info {
+}
