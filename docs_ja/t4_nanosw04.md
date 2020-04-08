@@ -27,7 +27,7 @@ P4Runtime sh >>> exit
 今回スイッチプログラムに変更はないので、nanosw03 を再び実行し、PacketIn() 関数を呼び出して下さい。
 
 ```python
-(venv) root@f4f19294589c:/tmp/nanosw03# /p4runtime-sh/p4runtime-sh --grpc-addr 192.168.XX.XX:50001 --device-id 1 --election-id 0,1 --config p4info.txt,nanosw03.json
+(venv) root@f4f19294589c:/tmp/nanosw04# /p4runtime-sh/p4runtime-sh --grpc-addr 192.168.XX.XX:50001 --device-id 1 --election-id 0,1 --config p4info.txt,nanosw03.json
 *** Welcome to the IPython shell for P4Runtime ***
 P4Runtime sh >>> PacketIn()
 

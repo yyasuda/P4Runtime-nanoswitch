@@ -167,10 +167,10 @@ def PacketOut(port, mcast_grp, payload):
     packet.payload = payload
 
     metadata = p4runtime_pb2.PacketMetadata()
-    metadata.metadata_id = 1
+    metadata.metadata_id = 1   <<<<< egress_port
     metadata.value = port
     packet.metadata.append(metadata)
-    metadata.metadata_id = 3
+    metadata.metadata_id = 3   <<<<< mcast_id
     metadata.value = mcast_grp
     packet.metadata.append(metadata)
 
