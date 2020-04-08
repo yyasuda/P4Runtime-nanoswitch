@@ -25,7 +25,7 @@ A Simple L2 lerning switch development tutorial on P4Runtime
 
 今回作成する L2 Learning switch が、h1 から h2 へ ping したときに発生する、ping request / reply パケットが、どのようにフローテーブルを構成するのか、その過程を示します。
 
-<img src="../experiment.png" alt="attach:(Packet and flow entry sequences)" title="Packet and flow entry sequences">
+<img src="experiment.png" alt="attach:(Packet and flow entry sequences)" title="Packet and flow entry sequences">
 
 
 
@@ -78,7 +78,7 @@ Ingress port をリピートの対象としないよう工夫します
 
 ### 改造版 P4Runtime Shell
 
-今回のチュートリアルは P4Runtime Shell に機能を追加しながら行いました。私の手元で使っていた[改造版 P4Runtime Shell](https://github.com/yyasuda/p4runtime-shell) を公開しています。Dockerfile.dev をオリジナル・バージョンと見比べれば、どこを改造したか分かると思います。これを [Tutorial 0](t0_nanosw01.md) で示した方法で作成した [Docker Image](https://hub.docker.com/r/yutakayasuda/p4runtime-shell-dev) も公開しています。
+今回のチュートリアルは P4Runtime Shell に機能を追加しながら行いました。私の手元で使っていた[改造版 P4Runtime Shell](https://github.com/yyasuda/p4runtime-shell) を公開しています。Dockerfile.dev をオリジナル・バージョンと見比べれば、どこを改造したか分かると思います。これを Tutorial0: [実験環境の準備](t0_prepare.md) で示した方法で作成した [Docker Image](https://hub.docker.com/r/yutakayasuda/p4runtime-shell-dev) も公開しています。
 
 そこには今回のチュートリアルで利用した機能がすべて含まれている上に、ここでは紹介しなかった機能もあります。興味のある方は以下のリンクを見て下さい。
 
