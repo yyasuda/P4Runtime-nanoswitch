@@ -6,7 +6,7 @@
 
 #### P4Runtime Shell 側操作
 
-ここではマルチキャストグループの設定を行います。
+ここでは Multicast Group の設定を行います。
 
 スイッチ s1 は port 1, 2, 3 の三つのポートを持っています。これらをすべて一つの Multicast Group に登録し、そこにパケットを出力することで、いわゆる Flooding が行われます。
 
@@ -35,7 +35,7 @@ P4Runtime sh >>>
 
 #### Mininet 側操作
 
-このマルチキャストグループの設定ができた状態で ping 要求を送ると、ともかく ping 応答が帰ってくることが確認できます。
+この Multicast Group の設定ができた状態で ping 要求を送ると、ともかく ping 応答が帰ってくることが確認できます。
 ```bash
 mininet> h1 ping -c 1 h2       <<<<<< h1 から h2 への ping を一回だけ送る
 PING 10.0.0.2 (10.0.0.2) 56(84) bytes of data.

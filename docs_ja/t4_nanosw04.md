@@ -8,7 +8,7 @@
 
 1. P4Runtime Shell の起動と Mininet への接続 - see; Tutorial 0: [実験環境の準備](./t0_prepare.md)
 2. Multicast Group の設定 - see; Tutorial 1: [NanoSwitch01](./t1_nanosw01.md)
-   それがないとFloodingが行われません。そして（目に見える）エラーも発生しません。
+   それがないとFloodingが行われません。そして（目に見える）エラーも発生しないため、何故動かないのか分からなくなります。
 
 ### 実験
 

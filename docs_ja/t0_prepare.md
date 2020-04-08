@@ -19,7 +19,7 @@ root@f53fc79201b8:/tmp#
 
 今回実験する環境のシステム構成を示します。
 
-<img src="/Volumes/yasuda/Documents/Private/memo/P4/P4runtime-nanoswitch/system.png" alt="attach:(system structure)" title="System Structure" width="500">
+<img src="../system.png" alt="attach:(system structure)" title="System Structure" width="500">
 
 #### Mininet 環境の立ち上げ
 

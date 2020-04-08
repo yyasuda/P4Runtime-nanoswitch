@@ -8,11 +8,12 @@ A Simple L2 lerning switch development tutorial on P4Runtime
 
 ## This tutorial does…
 
-このチュートリアルでは、以下の三つのことを試します。最終的には非常に簡素な MAC Learning Switch が出来上がります。
+このチュートリアルでは、以下の四つのことを試します。最終的には非常に簡素な MAC Learning Switch が出来上がります。
 
 1. Multicast Group の設定と、それを利用した Flooding 処理
 2. Packet-In 処理を利用した、コントローラへの処理依頼
 3. Packet-Out 処理を利用した、スイッチのテーブルへのエントリ追加
+4. そうした実験を行うための P4Runtime Shell への機能追加
 
 これらの実験は、以下の環境で行います。
 
@@ -72,7 +73,22 @@ Ingress port をリピートの対象としないよう工夫します
 
 - そもそも通常の L2 Learning Switch では、destination host が何番ポートに居るかだけを記憶し、フローごとにエントリを記憶する必要がありません。しかしP4 でそれを実現するには、source MAC でマッチングするものと、destination MAC + port でマッチングするものの、二つのテーブルが必要です。二つのテーブルを順にマッチしていくスイッチを作ってみませんか？
 
-  
+
+## Appendix
+
+### 改造版 P4Runtime Shell
+
+今回のチュートリアルは P4Runtime Shell に機能を追加しながら行いました。私の手元で使っていた[改造版 P4Runtime Shell](https://github.com/yyasuda/p4runtime-shell) を公開しています。Dockerfile.dev をオリジナル・バージョンと見比べれば、どこを改造したか分かると思います。これを [Tutorial 0](t0_nanosw01.md) で示した方法で作成した [Docker Image](https://hub.docker.com/r/yutakayasuda/p4runtime-shell-dev) も公開しています。
+
+そこには今回のチュートリアルで利用した機能がすべて含まれている上に、ここでは紹介しなかった機能もあります。興味のある方は以下のリンクを見て下さい。
+
+- [改造版 P4Runtime Shell に追加したその他の機能](ta_p4rt-sh-misc.md)
+
+### RAW パケットの送信
+
+Mininet では ping などのツールがあり、ARP などを生じさせずに簡単にパケットを送信できますが、たとえば Wedge Switch など実機を使った実験などでは、Wedge 自身 (OpenNetworkLinux) あるいは Wedge のポートに接続した Windows/Mac などから任意のパケットを送信したくなるでしょう。そうした場合のツールを置いておきます。
+
+- [RAW パケットを送信する方法](ta_rawsend.md)
 
 ### CPU port の変更
 

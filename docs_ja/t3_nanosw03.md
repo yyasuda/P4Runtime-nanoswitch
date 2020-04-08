@@ -83,7 +83,9 @@ packet-in: dst=00:00:00:00:00:01 src=00:00:00:00:00:02 port=b'\x00\x02'
 
 ### パケットの動き
 
-nanosw03.p4 には、幾つかの修正点があります。
+nanosw03.p4 には、幾つかの修正点があります。Packet-In 処理と Packet-Out 処理部分に分けて説明します。
+
+#### Packet-In に関連する動き
 
 まず、l2_match_table テーブルの default_action が to_controller となりました。相変わらずフローテーブルは空なので、すべてのパケットが Controller に Packet-In されることになります。flooding action は使用しません。
 
@@ -143,9 +145,11 @@ def PacketIn():
         return None # nothing to do. just return.
 ```
 
-つまりPacketIn() 関数が StreamMessage を待ち受け、受信すると packetin_process() 関数を、引数に受け取った Packet-In パケットを与えて呼び出します。packetin_process() 関数は無条件に受け取ったパケットに、マルチキャスト・グループ情報(1) と、元の Ingress_port の情報をつけてPacketOut() 関数に渡します。
+つまりPacketIn() 関数が StreamMessage を待ち受け、受信すると packetin_process() 関数を、引数に受け取った Packet-In パケットを与えて呼び出します。packetin_process() 関数は無条件に受け取ったパケットに、Multicast Group の情報(1) と、元の Ingress_port の情報をつけてPacketOut() 関数に渡します。
 
-以下に packet_out ヘッダと PacketOut() 関数の実装を示します。packet_out ヘッダにはマルチキャストグループの情報が追加されています。
+#### Packet-Out に関連する動き
+
+以下に packet_out ヘッダと PacketOut() 関数の実装を示します。packet_out ヘッダにはMulticast Groupの情報が追加されています。
 
 ```C++
 @controller_header("packet_out")
@@ -194,21 +198,69 @@ def PacketOut(port, mcast_grp, payload):
 
 つまり、
 
-- もし Packet-Out にマルチキャストグループの指定がない (0) なら、
+- もし Packet-Out にMulticast Groupの指定がない (0) なら、
   - 出力先は packet_out.egress_port となる
-- もしマルチキャストグループの指定があれば、
+- もしMulticast Groupの指定があれば、
   -  マルチキャストの出力先としてそこを指定し、
   - Ingress_port を packet_out.egress_port に書かれたポートとする
 
-特に最後の処理は重要かつ、いくらかトリッキーなものになっています。（ごめんなさい。フィールドを節約したかったんです。）
+特に最後の処理は重要かつ、いくらかトリッキーなものになっています。（ごめんなさい。フィールドを節約したかったんです。動作を確認したい人はこの次の節を読んで下さい。）
+
+
 
 スイッチプログラムの Egress 処理などは nanosw02.p4 と同じままです。これで「すべてのパケットがコントローラを介した Flooding となる」ことが分かるでしょうか。
-
-
 
 この Tutorial では、Packet-In/Out を介したコントローラとの協調作業を試しました。もちろんこんなことをしていてはスイッチとしてまったく性能が出ません。次の Tutorial では、ちゃんとホストに対応するフロー・エントリを追加し、コントローラを介さないパケットの交換を実現するスイッチを作ります。
 
 
+
+### Packet-Out処理の実験
+
+上に書いたように、このスイッチのPacket-Out 処理に対するMulticast Group と egress_port の設定はいくらかトリッキーです。以下のようにして挙動を確認すると分かりやすいかもしれません。
+
+#### port 3 に出力する Unicast 指定
+
+packetout3.txt に、port 3 にのみ出力するための Stream Message Request を作りました。以下のように Request() 関数を使ってスイッチに送り込むことができます。
+
+```bash
+P4Runtime sh >>> Request("/tmp/packetout3.txt")
+packet {
+  payload: "\377\377\377\377\377\377\377\377\377\377\377\377\000\0001234567890123456789012345678901234567890123456789012345678901234567890123456789"
+  metadata {
+    metadata_id: 1    <<<<< egress_port
+    value: "\000\003"
+  }
+  metadata {
+    metadata_id: 3    <<<<< mcast_id
+    value: "\000\000"
+  }
+}
+```
+
+Mininet の各ポートをモニタリングしておけば、 port 3 (s1-eth3) にだけパケットが検出される事がわかるでしょう。
+
+#### port 3 以外のすべてのポートに出力する Multicast 指定
+
+packetout3else.txt に、port 3 以外のすべてのポートに出力するための Stream Message Request を作りました。以下のように Request() 関数を使ってスイッチに送り込むことができます。
+
+```bash
+P4Runtime sh >>> Request("/tmp/packetout3else.txt")                                                                                            
+packet {
+  payload: "\377\377\377\377\377\377\377\377\377\377\377\377\000\0001234567890123456789012345678901234567890123456789012345678901234567890123456789"
+  metadata {
+    metadata_id: 1    <<<<< egress_port
+    value: "\000\003"
+  }
+  metadata {
+    metadata_id: 3    <<<<< mcast_id
+    value: "\000\001"
+  }
+}
+```
+
+Mininet の各ポートをモニタリングしておけば、 port 3 (s1-eth3) 以外のポートにパケットが検出される事がわかるでしょう。
+
+#### 
 
 ## Next Step
 
