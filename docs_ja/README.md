@@ -31,7 +31,7 @@ A Simple L2 lerning switch development tutorial on P4Runtime
 
 ### Tutorial 0: [実験環境の準備](./t0_prepare.md)
 
-実験に先だって、P4 スイッチプログラムのコンパイルが必要です。次にMininetを起動し、そこにコントローラ代わりとなる、P4 Runtime Shell を接続させます。
+Mininetを起動し、そこにコントローラ代わりとなる、P4 Runtime Shell を接続させます。
 
 ### Tutorial 1: [NanoSwitch01](./t1_nanosw01.md)
 

@@ -17,7 +17,7 @@ P4Runtime sh >>>
 
 #### スイッチ側に Multicast Group の設定が残る（バグ？）
 
-Tutorial 1 で Multicast Group を設定しました。この設定は P4Runtime Shell を終了したあとも Mininet のスイッチに残っています。そのため、P4Runtime を再実行しても、Multicast Group の設定をもう一度行う必要はありません。しかし実際には read() は機能しません（先の me.read() は変数 me に記録されたレプリカを表示しているだけで、スイッチから情報を取得しているわけでは無いのです）し、再度同じ id で insert() してもエラーにはなりません。そのくせ、ping を飛ばすと「二度」パケットを複製します。
+Tutorial 1 で Multicast Group を設定しました。この設定は P4Runtime Shell を終了したあとも Mininet のスイッチに残っています。そのため、P4Runtime Shlell を再実行しても、Multicast Group の設定をもう一度行う必要はありません。しかし実際には read() は機能しません（先の me.read() は変数 me に記録されたレプリカを表示しているだけで、スイッチから情報を取得しているわけでは無いのです）し、再度同じ id で insert() してもエラーにはなりません。そのくせ、ping を飛ばすと「二度」パケットを複製します。
 
 この Mininet のスイッチ側の挙動が P4Runtime として正しいのか、あるいはバグなのか私には分かりません。とりあえず P4Runtime Shell を再起動して、以前に Multicast Group を登録したはずのスイッチに残されている Multicast Group id 1 の設定を消去する方法だけ以下に示しておきます。
 

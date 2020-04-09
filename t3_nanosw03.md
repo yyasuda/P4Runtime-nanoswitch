@@ -1,12 +1,12 @@
 ## Tutorial 3: NanoSwitch03
 
-今回試すスイッチは、スイッチ側にフロー・テーブルを作って未知のホストに対応します。フロー・テーブルにエントリを登録する処理のために、コントローラ（P4Runtime Shell）に少し機能を追加します。
+This time, the switch creates a flow table on the switch side to accommodate the unknown host. We will add some functionality to the controller (P4Runtime Shell) for the process of registering entries into the flow table.
 
-### 実験
+### Experiment
 
-#### P4Runtime Shell 側操作
+#### P4Runtime Shell operation
 
-一旦 P4Runtime Shell の実行を終わり、機能追加された shell.py と置き換えます。
+Terminate the execution of the P4Runtime Shell and replace shell.py with the expanded version of it in nanosw03 directory. 
 
 ```python
 P4Runtime sh >>> exit
@@ -15,7 +15,7 @@ P4Runtime sh >>> exit
 (venv) root@f4f19294589c:/tmp/nanosw03# 
 ```
 
-スイッチプログラムを nanosw03 に切り替えて再実行し、PacketIn() 関数を呼び出して下さい。
+Re-run the switch with the new switch program nanosw03, then call the PacketIn() function.
 ```python
 (venv) root@f4f19294589c:/tmp/nanosw03# /p4runtime-sh/p4runtime-sh --grpc-addr 192.168.XX.XX:50001 --device-id 1 --election-id 0,1 --config p4info.txt,nanosw03.json
 *** Welcome to the IPython shell for P4Runtime ***
@@ -24,11 +24,11 @@ P4Runtime sh >>> PacketIn()
 ......
 ```
 
-#### Mininet 側操作
+#### Mininet operation
 
-ここで再び ping 要求を送ると、先ほど同様に ping 応答が帰ってくることが確認できます。
+If you send a ping request again here, you can confirm that the ping response is returned as before.
 ```bash
-mininet> h1 ping -c 1 h2       <<<<<< h1 から h2 への ping を一回だけ送る
+mininet> h1 ping -c 1 h2       <<<<<< ping from h1 to h2 once
 PING 10.0.0.2 (10.0.0.2) 56(84) bytes of data.
 64 bytes from 10.0.0.2: icmp_seq=1 ttl=64 time=6.23 ms
 
@@ -39,7 +39,7 @@ mininet>
 
 ```
 
-以下に各ポートのモニタリング結果を示します。これもまた無駄なパケットの折り返しが抑制されていることが分かります。
+The monitoring results of each port are shown below. You can see that this also suppresses unnecessary packet repeating.
 
 #####  h1 (s1-eth1)
 
@@ -62,32 +62,32 @@ mininet>
 12:30:55.740679 IP 10.0.0.2 > 10.0.0.1: ICMP echo reply, id 129, seq 1, length 64
 ```
 
-#### P4 RuntimeShell 側画面
+#### P4 RuntimeShell operation
 
-このとき、以下のような表示が出ていることが確認できます。往復した二つのパケットがどちらも Packet-In 処理されていることが分かります。
+At this time, you can see the following messages. You can see that both of the two packets that have been round tripped are processed in Packet-In.
 
 ```bash
 P4Runtime sh >>> PacketIn()                                                                                                                    
 
 ........
-======              <<<< 一つ目のパケットの処理
+======              <<<< 1st packet processing
 packet-in: dst=00:00:00:00:00:02 src=00:00:00:00:00:01 port=b'\x00\x01'
 .
-======              <<<< 二つ目のパケットの処理
+======              <<<< 2nd packet processing
 packet-in: dst=00:00:00:00:00:01 src=00:00:00:00:00:02 port=b'\x00\x02'
 ..
-......^C  <<<< Control-C で中断
+......^C  <<<< interrupted by Control-C 
 ```
 
-次にこの実験でのパケットの動きについて説明します。
+The following sections describe the behavior of the packet in this experiment.
 
-### パケットの動き
+### The behavior of the packet
 
-nanosw03.p4 には、幾つかの修正点があります。Packet-In 処理と Packet-Out 処理部分に分けて説明します。
+The nanosw03.p4, there are several fixes. This section describes the packet-in process and the packet-out process separately.
 
-#### Packet-In に関連する動き
+#### Processing associated with Packet-In
 
-まず、l2_match_table テーブルの default_action が to_controller となりました。相変わらずフローテーブルは空なので、すべてのパケットが Controller に Packet-In されることになります。flooding action は使用しません。
+First, the default_action for the l2_match_table is now to_controller. Since the flow table is still empty, all packets will be processed as Packet-In to the Controller. Here flooding action is not used.
 
 ```C++
     action to_controller() {
@@ -109,7 +109,7 @@ nanosw03.p4 には、幾つかの修正点があります。Packet-In 処理と 
         default_action = to_controller;
     }
 ```
-この Packet-In 処理は先ほど置き換えた shell.py の中に実装されています。
+This Packet-In processing is implemented in the shell.py replaced earlier.
 ```Python
 def packetin_process(pin):
     payload = pin.packet.payload
@@ -145,11 +145,11 @@ def PacketIn():
         return None # nothing to do. just return.
 ```
 
-つまりPacketIn() 関数が StreamMessage Response を待ち受け、受信すると packetin_process() 関数を、引数に受け取った Packet-In パケットを与えて呼び出します。packetin_process() 関数は無条件に受け取ったパケットに、Multicast Group の情報(1) と、元の Ingress_port の情報をつけてPacketOut() 関数に渡します。
+That is, the PacketIn() function waits for a StreamMessage Response and then calls the packet_process() function with the Packet-In packet as an argument. The packet_process() function always passes the received packet to the PacketOut() function with the Multicast Group id (1) and the original Ingress_port information.
 
-#### Packet-Out に関連する動き
+#### Processing associated with Packet-Out
 
-以下に packet_out ヘッダと PacketOut() 関数の実装を示します。packet_out ヘッダにはMulticast Groupの情報が追加されています。
+The implementation of packet_out header and PacketOut() function is shown below. Multicast Group information is added to the packet_out header.
 
 ```C++
 @controller_header("packet_out")
@@ -177,16 +177,14 @@ def PacketOut(port, mcast_grp, payload):
     client.stream_out_q.put(req)
 ```
 
-この PacketOut() 関数は、とても単純に packet_out ヘッダをセットしてスイッチに送り出すだけのものです。
-
-この追加された packet_out ヘッダ、つまり mcat_grp に反応するために、nanosw03.p4 側の Packet-Out 処理を修正しています。
-元は以下のような記述でした。つまり Packet-Out （CPU_PORT から来たパケット）だったら、そこに指定された packet_out.egress_port に出力するだけのものです。
+The PacketOut() function is very simple: it sets a packet_out header and sends it to the switch. The packet-out processing of nanosw03.p4 has been modified to respond to the added packet_out header, that is, mcat_grp.
+It was originally written as follows. That is, if it is a Packet-Out (Packets from CPU_PORT), it simply outputs to the specified packet_out.egress_port.
 
 ```C++
             standard_metadata.egress_spec = hdr.packet_out.egress_port;
             hdr.packet_out.setInvalid();
 ```
-ここを以下のように書き換えています。
+This is rewritten as follows.
 ```C++
             if (hdr.packet_out.mcast_grp == 0) { // packet out to specified port
                 standard_metadata.egress_spec = hdr.packet_out.egress_port;
@@ -196,31 +194,29 @@ def PacketOut(port, mcast_grp, payload):
             }
 ```
 
-つまり、
+It is summarized as follows:
 
-- もし Packet-Out にMulticast Groupの指定がない (0) なら、
-  - 出力先は packet_out.egress_port となる
-- もしMulticast Groupの指定があれば、
-  -  マルチキャストの出力先としてそこを指定し、
-  - Ingress_port を packet_out.egress_port に書かれたポートとする
+- If the Packet-Out does not specify a Multicast Group (0),
+  - Output destination is packet_out.egress_port
+- If a Multicast Group is specified,
+  -  Specify that as the multicast output destination,
+  - Set Ingress_port to the port written in packet_out.egress_port
 
-特に最後の処理は重要かつ、いくらかトリッキーなものになっています。（ごめんなさい。フィールドを節約したかったんです。動作を確認したい人はこの次の節を読んで下さい。）
+In particular, the last step is important and somewhat tricky. (I'm sorry. I wanted to save the field. Read the next section if you want to see how it works.)
 
+The egress processing of the switch program remains the same as nanosw02.p4. Do you see that all packets are flooded through the controller?
 
-
-スイッチプログラムの Egress 処理などは nanosw02.p4 と同じままです。これで「すべてのパケットがコントローラを介した Flooding となる」ことが分かるでしょうか。
-
-この Tutorial では、Packet-In/Out を介したコントローラとの協調作業を試しました。もちろんこんなことをしていてはスイッチとしてまったく性能が出ません。次の Tutorial では、ちゃんとホストに対応するフロー・エントリを追加し、コントローラを介さないパケットの交換を実現するスイッチを作ります。
+In this tutorial, we tried to work with the controller via Packet-In / Out. Of course you do not get the performance of the switch in such a way. In the next tutorial, you add flow entries that correspond properly to the host and creates a switch that allows packet exchange without the controller.
 
 
 
-### Packet-Out処理の実験
+### To verify the operation of the Packet-Out process
 
-上に書いたように、このスイッチのPacket-Out 処理に対するMulticast Group と egress_port の設定はいくらかトリッキーです。以下のようにして挙動を確認すると分かりやすいかもしれません。
+As mentioned above, setting the Multicast Group and egress_port for this switch's Packet-Out processing is somewhat tricky. It may be easy to understand if you check the behavior as follows.
 
-#### port 3 に出力する Unicast 指定
+#### Unicast specified to be output to port 3
 
-packetout3.txt に、port 3 にのみ出力するための Stream Message Request を作りました。以下のように Request() 関数を使ってスイッチに送り込むことができます。
+I created a Stream Message Request in packetout3.txt to output only to port 3. It can be sent to the switch using the Request() function as follows:
 
 ```bash
 P4Runtime sh >>> Request("/tmp/packetout3.txt")
@@ -237,11 +233,11 @@ packet {
 }
 ```
 
-Mininet の各ポートをモニタリングしておけば、 port 3 (s1-eth3) にだけパケットが検出される事がわかるでしょう。
+If you monitor each port of Mininet, you will see that packets are detected only on port 3 (s1-eth3).
 
-#### port 3 以外のすべてのポートに出力する Multicast 指定
+#### Multicast specification to output to all ports except port 3
 
-packetout3else.txt に、port 3 以外のすべてのポートに出力するための Stream Message Request を作りました。以下のように Request() 関数を使ってスイッチに送り込むことができます。
+I created a Stream Message Request in packetout3else.txt to output to all ports except port 3. You can send it to the switch using the Request() function:
 
 ```bash
 P4Runtime sh >>> Request("/tmp/packetout3else.txt")                                                                                            
@@ -258,7 +254,7 @@ packet {
 }
 ```
 
-Mininet の各ポートをモニタリングしておけば、 port 3 (s1-eth3) 以外のポートにパケットが検出される事がわかるでしょう。
+If you monitor each port of Mininet, you will see that packets are detected on ports other than port 3 (s1-eth3).
 
 #### 
 

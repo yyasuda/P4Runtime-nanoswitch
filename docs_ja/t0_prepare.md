@@ -13,7 +13,7 @@ root@f53fc79201b8:/tmp#
 
 ここで生成した p4info.txt と nanosw01.json を使って、あとで P4Runtime Shell を起動することになります。
 
-### Step 1. スイッチの準備（Mininet 環境の立ち上げ）
+### スイッチの準備（Mininet 環境の立ち上げ）
 
 #### システム構成
 
@@ -44,7 +44,7 @@ mininet>
 ```
 h1 がスイッチにつながれているインタフェイス h1-eth0 の MAC アドレスは  00:00:00:00:00:01です。同様に h2 が 00:00:00:00:00:02、h3 が 00:00:00:00:00:03 です。
 
-### Step2. P4Runtime Shell と Mininet の接続
+### P4Runtime Shell と Mininet の接続
 
 #### P4Runtime Shell dev 版の作成
 
@@ -73,7 +73,7 @@ $ docker run -it -v /tmp/P4runtime-nanoswitch/:/tmp/ myproj/p4rt-sh-dev /bin/bas
 root@d633c64bbb3c:/p4runtime-sh# source $VENV/bin/activate
 (venv) root@d633c64bbb3c:/p4runtime-sh# 
 ```
-ここではホストの /tmp/P4runtime-nanoswitch ディレクトリと docker の /tmp を同期させていることに注意して下さい。それから、上の `. activate` 処理はすぐこの後の操作で重要なので忘れないように。
+ここではホストの /tmp/P4runtime-nanoswitch ディレクトリと docker の /tmp を同期させていることに注意して下さい。それから、上の ```source $VENV/bin/activate``` 処理はすぐこの後の操作で重要なので忘れないように。
 
 #### Mininet への接続
 

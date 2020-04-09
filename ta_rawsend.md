@@ -1,10 +1,10 @@
-## RAW パケットを送信する方法
+## Send RAW Packets
 
-Mininet では ping などのツールがあり、ARP などを生じさせずに簡単にパケットを送信できますが、たとえば Wedge Switch など実機を使った実験などでは、Wedge 自身 (OpenNetworkLinux) あるいは Wedge のポートに接続した Mac などから任意のパケットを送信したくなるでしょう。そうした場合のツールを置いておきます。
+Mininet provides tools such as ping, which makes it easy to send packets without ARP, etc. However, in experiments with real devices such as the Wedge Switch, you may want to send arbitrary packets from Wedge itself (OpenNetworkLinux) or a Windows/Mac connected to the Wedge port. Here are the tools for that.
 
 ### rawsend.py - for Linux
 
-Linux 環境では、このチュートリアルに含まれている rawsend.py が使えます。
+In a Linux environment, you can use the rawsend.py included in this tutorial.
 
 ```python
 import socket
@@ -20,7 +20,7 @@ print('Packet sent.')
 s.close()
 ```
 
-実行は単に ```python rawsend.py``` とするだけで良いのですが、以下のようにすれば Mininet 環境でも簡単に使うことができます。
+You can simply execute it with ```python rawsend.py```, but you can easily use it in Mininet environment as follows.
 
 ```python
 mininet> sh cat > rawsend.py
@@ -32,7 +32,7 @@ Packet sent.
 mininet> 
 ```
 
-モニタリング結果を出しておきます。
+I will give you the monitoring results.
 
 ```bash
 root@cc44475855d7:~#  tcpdump -XX -i s1-eth1
@@ -50,7 +50,7 @@ listening on s1-eth1, link-type EN10MB (Ethernet), capture size 262144 bytes
 
 ### rawsend.c - for MacOS
 
-MacOS ではこのチュートリアルに含まれている rawsend.c が使えます。上の Python プログラムが使えれば簡単で良いのですが、AF_PACKET はLinux でしか使えず、BSD 系OSではBPF (Berkley Packet Filters) つまり pcap ライブラリを使って、以下のようにコードする必要があります。
+On MacOS, you can use rawsend.c included in this tutorial. It would be simple if you could use the Python program above, but AF_PACKET is only available on Linux. On BSD-like OSs you need to code using BPF (Berkley Packet Filters), or pcap library, as follows:
 
 ```C
 #include <stdlib.h> 
@@ -99,7 +99,7 @@ int main(int argc, char **argv) {
 
 source: https://tuprints.ulb.tu-darmstadt.de/6243/1/TR-18.pdf 
 
-以下のようにしてコンパイル・実行すれば良いでしょう。
+Compile and execute as follows.
 
 ```bash
 $ cc -o rawsend -lpcap rawsend.c

@@ -75,7 +75,7 @@ Nothing (returned None)
 
 P4Runtime sh >>> 
 
-<<<< 必要なら以下のようにして l2_match_table に登録されたフロー・エントリを確認することもできる。
+<<<< 以下のようにして l2_match_table に登録されたフロー・エントリを確認することもできる。
 P4Runtime sh >>> table_entry["MyIngress.l2_match_table"].read(lambda te: print(te))
 table_id: 33609159 ("MyIngress.l2_match_table")
 match {
@@ -182,7 +182,7 @@ macTable = { "00:00:00:00:00:01": 1,
 
 ### 関係するコード
 
-今回は Tutorial 3 のものと全く同じ nanosw03.p4 スイッチプログラムを使っています。Tutorial 3 との違いはコントローラ側、つまり shell.py だけです。
+今回は Tutorial 3 のものと全く同じ nanosw03.p4 スイッチプログラムを使っています。Tutorial 3 との違いはコントローラ側、つまり shell.py と context.py だけです。
 
 #### shell.py
 
