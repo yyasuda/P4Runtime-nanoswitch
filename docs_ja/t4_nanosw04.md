@@ -132,7 +132,7 @@ P4Runtime sh >>>
 この処理を実現するために、コントローラ側ではホストの MAC アドレスと、それが接続されたポート番号のテーブル（変数名 macTable）を維持しています。これをホスト・テーブルと呼びます。スイッチ側のテーブル、l2_match_table をフロー・テーブルと呼ぶことにします。
 
 まずはじめに、二つのテーブルのステップごとの状態について図示しておきます。
-<img src="../experiment.png" alt="attach:(Packet and flow entry sequences)" title="Packet and flow entry sequences">
+<img src="experiment.png" alt="attach:(Packet and flow entry sequences)" title="Packet and flow entry sequences">
 以下にその詳細を説明します。
 
 #### 1. Initial State

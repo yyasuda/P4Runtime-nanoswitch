@@ -6,6 +6,8 @@ A Simple L2 lerning switch development tutorial on P4Runtime
 
 このチュートリアルは、P4Runtime の Packet-In/Out 機能を使って簡単なスイッチを構築するものです。P4Runtime Shell をベースとした、簡易なコントローラを試作するとともに、今後あなたが継続的に機能を拡張するのが容易な環境を提供します。
 
+
+
 ## This tutorial does…
 
 このチュートリアルでは、以下の四つのことを試します。最終的には非常に簡素な MAC Learning Switch が出来上がります。
@@ -20,12 +22,6 @@ A Simple L2 lerning switch development tutorial on P4Runtime
 - コントローラ役には P4Runtime Shell を用いる
 - スイッチ役には P4Runtime に対応した Mininet を用いる
 - P4 コンパイルにはオープンソースの p4c を用いる
-
-### パケットの到来とフロー・エントリ作成の関係
-
-今回作成する L2 Learning switch が、h1 から h2 へ ping したときに発生する、ping request / reply パケットが、どのようにフローテーブルを構成するのか、その過程を示します。
-
-<img src="experiment.png" alt="attach:(Packet and flow entry sequences)" title="Packet and flow entry sequences">
 
 
 
@@ -72,6 +68,7 @@ Ingress port をリピートの対象としないよう工夫します
 - 登録できるエントリ数には限りがありますから、しばらくパケットが流れなかったフローエントリについては削除すべきです。
 
 - そもそも通常の L2 Learning Switch では、destination host が何番ポートに居るかだけを記憶し、フローごとにエントリを記憶する必要がありません。しかしP4 でそれを実現するには、source MAC でマッチングするものと、destination MAC + port でマッチングするものの、二つのテーブルが必要です。二つのテーブルを順にマッチしていくスイッチを作ってみませんか？
+
 
 
 ## Appendix

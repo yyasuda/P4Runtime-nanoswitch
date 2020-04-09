@@ -6,17 +6,17 @@
 
 #### P4Runtime Shell 側操作
 
-ここでは Multicast Group の設定を行います。
+ここでは Multicast Group の設定を行います。P4Runtime の MulticastGroupEntry を利用することで、一つのパケットを複数のポートに複製して出力することができます。
 
-スイッチ s1 は port 1, 2, 3 の三つのポートを持っています。これらをすべて一つの Multicast Group に登録し、そこにパケットを出力することで、いわゆる Flooding が行われます。
+たとえばスイッチ s1 は port 1, 2, 3 の三つのポートを持っています。これらをすべて一つの Multicast Group に登録し、パケットの出力先をこの Multicast Group にすることで、いわゆる Flooding が行われます。
+
+以下の操作は、Multicast Group の id 1 に対して、port 1, 2, 3 を結びつけるリクエストを作成する操作です。作成されたリクエストを insert() 操作によってスイッチに送ると、スイッチ内に Multicast Group が設定されます。
 
 ```python
-P4Runtime sh >>> me = MulticastGroupEntry(1).add(1).add(2).add(3)
+P4Runtime sh >>> me = MulticastGroupEntry(1)
 
-P4Runtime sh >>> me.insert()
-
-P4Runtime sh >>> me.read()
-Out[5]: 
+P4Runtime sh >>> me.add(1).add(2).add(3)
+Out[6]: 
 multicast_group_entry {
   multicast_group_id: 1
   replicas {
@@ -30,7 +30,34 @@ multicast_group_entry {
   }
 }
 
-P4Runtime sh >>>       
+P4Runtime sh >>> me.insert()
+
+P4Runtime sh >>> 
+```
+
+なお上の操作の最初の二行は、以下のようにまとめて一行に書くこともできます。また、```me.read()``` によって登録した内容を確認することができます。
+
+```bash
+P4Runtime sh >>> me = MulticastGroupEntry(1).add(1).add(2).add(3)
+
+P4Runtime sh >>> me.insert()                                                                                                                   
+
+P4Runtime sh >>> me.read()                                                                                                                     
+Out[4]: 
+multicast_group_entry {
+  multicast_group_id: 1
+  replicas {
+    egress_port: 1
+  }
+  replicas {
+    egress_port: 2
+  }
+  replicas {
+    egress_port: 3
+  }
+}
+
+P4Runtime sh >>> 
 ```
 
 #### Mininet 側操作
@@ -90,7 +117,7 @@ listening on s1-eth1, link-type EN10MB (Ethernet), capture size 262144 bytes
 
 nanosw01.p4 の Ingress 処理を見て下さい。default_action が flooding に設定されています。今は l2_match_table は空ですから、すべてのパケットが flooding 処理されます。
 
-flooding() 関数の中身は、standard_metadata.mcast_grp を 1 に設定するだけですが、これで先ほど設定した multicast_group_id: 1 に登録された全ポートにパケットが出力されます。
+flooding() 関数の中身は、standard_metadata.mcast_grp を 1 に設定するだけです。これで先ほど設定した multicast_group_id: 1 に登録された全ポートにパケットが出力されます。
 
 ```C++
     action flooding() {
@@ -119,6 +146,8 @@ flooding() 関数の中身は、standard_metadata.mcast_grp を 1 に設定す�
 - このパケットは全ポートに複製され、それが全てのインタフェイスで観測されます。つまり ```#1-1, #2-1, #3-1``` パケットがそれです。
 - h2 は届いた ICMP Echo Request に対して reply を返します。これが ```#2-3``` です。
 - このパケットは全ポートに複製されます。```#1-3, #2-3, #3-2``` がそれです。
+
+なお、Multicast Group id は 1 以外の番号を使うことも出来ます。ただし 0 は使えません。0 が設定されていると、そのパケットの出力は Multicast ではないことを意味します。
 
 
 
