@@ -3,7 +3,10 @@
     {
       "name" : "scalars_0",
       "id" : 0,
-      "fields" : []
+      "fields" : [
+        ["metadata.ingress_port", 9, false],
+        ["metadata._pad", 7, false]
+      ]
     },
     {
       "name" : "standard_metadata",
@@ -252,7 +255,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "nanosw03.p4",
-        "line" : 182,
+        "line" : 183,
         "column" : 8,
         "source_fragment" : "MyDeparser"
       },
@@ -269,7 +272,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "nanosw03.p4",
-        "line" : 164,
+        "line" : 165,
         "column" : 12,
         "source_fragment" : "update_checksum( ..."
       },
@@ -348,7 +351,7 @@
           ],
           "source_info" : {
             "filename" : "nanosw03.p4",
-            "line" : 99,
+            "line" : 100,
             "column" : 8,
             "source_fragment" : "standard_metadata.egress_spec = port"
           }
@@ -374,7 +377,7 @@
           ],
           "source_info" : {
             "filename" : "nanosw03.p4",
-            "line" : 103,
+            "line" : 104,
             "column" : 8,
             "source_fragment" : "standard_metadata.egress_spec = 255"
           }
@@ -389,7 +392,7 @@
           ],
           "source_info" : {
             "filename" : "nanosw03.p4",
-            "line" : 107,
+            "line" : 108,
             "column" : 8,
             "source_fragment" : "hdr.packet_in.setValid()"
           }
@@ -408,7 +411,7 @@
           ],
           "source_info" : {
             "filename" : "nanosw03.p4",
-            "line" : 108,
+            "line" : 109,
             "column" : 8,
             "source_fragment" : "hdr.packet_in.ingress_port = standard_metadata.ingress_port"
           }
@@ -416,7 +419,7 @@
       ]
     },
     {
-      "name" : "nanosw03l137",
+      "name" : "nanosw03l138",
       "id" : 2,
       "runtime_data" : [],
       "primitives" : [
@@ -434,7 +437,7 @@
           ],
           "source_info" : {
             "filename" : "nanosw03.p4",
-            "line" : 137,
+            "line" : 138,
             "column" : 16,
             "source_fragment" : "standard_metadata.egress_spec = hdr.packet_out.egress_port"
           }
@@ -442,7 +445,7 @@
       ]
     },
     {
-      "name" : "nanosw03l139",
+      "name" : "nanosw03l140",
       "id" : 3,
       "runtime_data" : [],
       "primitives" : [
@@ -460,7 +463,7 @@
           ],
           "source_info" : {
             "filename" : "nanosw03.p4",
-            "line" : 139,
+            "line" : 140,
             "column" : 16,
             "source_fragment" : "standard_metadata.mcast_grp = hdr.packet_out.mcast_grp"
           }
@@ -470,7 +473,7 @@
           "parameters" : [
             {
               "type" : "field",
-              "value" : ["standard_metadata", "ingress_port"]
+              "value" : ["scalars", "metadata.ingress_port"]
             },
             {
               "type" : "field",
@@ -479,15 +482,15 @@
           ],
           "source_info" : {
             "filename" : "nanosw03.p4",
-            "line" : 140,
+            "line" : 141,
             "column" : 16,
-            "source_fragment" : "standard_metadata.ingress_port = hdr.packet_out.egress_port"
+            "source_fragment" : "meta.ingress_port = hdr.packet_out.egress_port"
           }
         }
       ]
     },
     {
-      "name" : "nanosw03l142",
+      "name" : "nanosw03l143",
       "id" : 4,
       "runtime_data" : [],
       "primitives" : [
@@ -501,7 +504,7 @@
           ],
           "source_info" : {
             "filename" : "nanosw03.p4",
-            "line" : 142,
+            "line" : 143,
             "column" : 12,
             "source_fragment" : "hdr.packet_out.setInvalid()"
           }
@@ -509,7 +512,7 @@
       ]
     },
     {
-      "name" : "nanosw03l157",
+      "name" : "nanosw03l158",
       "id" : 5,
       "runtime_data" : [],
       "primitives" : [
@@ -523,7 +526,7 @@
           ],
           "source_info" : {
             "filename" : "nanosw03.p4",
-            "line" : 157,
+            "line" : 158,
             "column" : 12,
             "source_fragment" : "mark_to_drop(standard_metadata)"
           }
@@ -537,18 +540,18 @@
       "id" : 0,
       "source_info" : {
         "filename" : "nanosw03.p4",
-        "line" : 95,
+        "line" : 96,
         "column" : 8,
         "source_fragment" : "MyIngress"
       },
       "init_table" : "node_2",
       "tables" : [
         {
-          "name" : "tbl_nanosw03l137",
+          "name" : "tbl_nanosw03l138",
           "id" : 0,
           "source_info" : {
             "filename" : "nanosw03.p4",
-            "line" : 137,
+            "line" : 138,
             "column" : 46,
             "source_fragment" : "="
           },
@@ -560,10 +563,10 @@
           "support_timeout" : false,
           "direct_meters" : null,
           "action_ids" : [2],
-          "actions" : ["nanosw03l137"],
-          "base_default_next" : "tbl_nanosw03l142",
+          "actions" : ["nanosw03l138"],
+          "base_default_next" : "tbl_nanosw03l143",
           "next_tables" : {
-            "nanosw03l137" : "tbl_nanosw03l142"
+            "nanosw03l138" : "tbl_nanosw03l143"
           },
           "default_entry" : {
             "action_id" : 2,
@@ -573,11 +576,11 @@
           }
         },
         {
-          "name" : "tbl_nanosw03l139",
+          "name" : "tbl_nanosw03l140",
           "id" : 1,
           "source_info" : {
             "filename" : "nanosw03.p4",
-            "line" : 139,
+            "line" : 140,
             "column" : 44,
             "source_fragment" : "= hdr.packet_out.mcast_grp; // set multicast flag ..."
           },
@@ -589,10 +592,10 @@
           "support_timeout" : false,
           "direct_meters" : null,
           "action_ids" : [3],
-          "actions" : ["nanosw03l139"],
-          "base_default_next" : "tbl_nanosw03l142",
+          "actions" : ["nanosw03l140"],
+          "base_default_next" : "tbl_nanosw03l143",
           "next_tables" : {
-            "nanosw03l139" : "tbl_nanosw03l142"
+            "nanosw03l140" : "tbl_nanosw03l143"
           },
           "default_entry" : {
             "action_id" : 3,
@@ -602,11 +605,11 @@
           }
         },
         {
-          "name" : "tbl_nanosw03l142",
+          "name" : "tbl_nanosw03l143",
           "id" : 2,
           "source_info" : {
             "filename" : "nanosw03.p4",
-            "line" : 142,
+            "line" : 143,
             "column" : 12,
             "source_fragment" : "hdr.packet_out.setInvalid()"
           },
@@ -618,10 +621,10 @@
           "support_timeout" : false,
           "direct_meters" : null,
           "action_ids" : [4],
-          "actions" : ["nanosw03l142"],
+          "actions" : ["nanosw03l143"],
           "base_default_next" : null,
           "next_tables" : {
-            "nanosw03l142" : null
+            "nanosw03l143" : null
           },
           "default_entry" : {
             "action_id" : 4,
@@ -635,7 +638,7 @@
           "id" : 3,
           "source_info" : {
             "filename" : "nanosw03.p4",
-            "line" : 116,
+            "line" : 117,
             "column" : 10,
             "source_fragment" : "l2_match_table"
           },
@@ -681,7 +684,7 @@
           "id" : 0,
           "source_info" : {
             "filename" : "nanosw03.p4",
-            "line" : 131,
+            "line" : 132,
             "column" : 10,
             "source_fragment" : "standard_metadata.ingress_port == 255"
           },
@@ -707,7 +710,7 @@
           "id" : 1,
           "source_info" : {
             "filename" : "nanosw03.p4",
-            "line" : 136,
+            "line" : 137,
             "column" : 16,
             "source_fragment" : "hdr.packet_out.mcast_grp == 0"
           },
@@ -725,15 +728,15 @@
               }
             }
           },
-          "true_next" : "tbl_nanosw03l137",
-          "false_next" : "tbl_nanosw03l139"
+          "true_next" : "tbl_nanosw03l138",
+          "false_next" : "tbl_nanosw03l140"
         },
         {
           "name" : "node_7",
           "id" : 2,
           "source_info" : {
             "filename" : "nanosw03.p4",
-            "line" : 144,
+            "line" : 145,
             "column" : 16,
             "source_fragment" : "hdr.ethernet.isValid()"
           },
@@ -758,18 +761,18 @@
       "id" : 1,
       "source_info" : {
         "filename" : "nanosw03.p4",
-        "line" : 151,
+        "line" : 152,
         "column" : 8,
         "source_fragment" : "MyEgress"
       },
       "init_table" : "node_11",
       "tables" : [
         {
-          "name" : "tbl_nanosw03l157",
+          "name" : "tbl_nanosw03l158",
           "id" : 4,
           "source_info" : {
             "filename" : "nanosw03.p4",
-            "line" : 157,
+            "line" : 158,
             "column" : 12,
             "source_fragment" : "mark_to_drop(standard_metadata)"
           },
@@ -781,10 +784,10 @@
           "support_timeout" : false,
           "direct_meters" : null,
           "action_ids" : [5],
-          "actions" : ["nanosw03l157"],
+          "actions" : ["nanosw03l158"],
           "base_default_next" : null,
           "next_tables" : {
-            "nanosw03l157" : null
+            "nanosw03l158" : null
           },
           "default_entry" : {
             "action_id" : 5,
@@ -801,9 +804,9 @@
           "id" : 3,
           "source_info" : {
             "filename" : "nanosw03.p4",
-            "line" : 156,
+            "line" : 157,
             "column" : 11,
-            "source_fragment" : "standard_metadata.egress_port == standard_metadata.ingress_port"
+            "source_fragment" : "meta.ingress_port == standard_metadata.egress_port"
           },
           "expression" : {
             "type" : "expression",
@@ -811,16 +814,16 @@
               "op" : "==",
               "left" : {
                 "type" : "field",
-                "value" : ["standard_metadata", "egress_port"]
+                "value" : ["scalars", "metadata.ingress_port"]
               },
               "right" : {
                 "type" : "field",
-                "value" : ["standard_metadata", "ingress_port"]
+                "value" : ["standard_metadata", "egress_port"]
               }
             }
           },
           "false_next" : null,
-          "true_next" : "tbl_nanosw03l157"
+          "true_next" : "tbl_nanosw03l158"
         }
       ]
     }
@@ -831,7 +834,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "nanosw03.p4",
-        "line" : 164,
+        "line" : 165,
         "column" : 12,
         "source_fragment" : "update_checksum( ..."
       },

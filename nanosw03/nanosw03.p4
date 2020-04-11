@@ -49,7 +49,8 @@ header ipv4_t {
 }
 
 struct metadata {
-    /* empty */
+    bit<9> ingress_port;
+    bit<7> _pad;
 }
 
 struct headers {
@@ -137,7 +138,7 @@ control MyIngress(inout headers hdr, inout metadata meta,
                 standard_metadata.egress_spec = hdr.packet_out.egress_port;
             } else { // broadcast to all port, or flood except specified port
                 standard_metadata.mcast_grp = hdr.packet_out.mcast_grp; // set multicast flag
-                standard_metadata.ingress_port = hdr.packet_out.egress_port; // store exception port
+                meta.ingress_port = hdr.packet_out.egress_port; // store exception port
             }
             hdr.packet_out.setInvalid();
         } else {
@@ -153,7 +154,7 @@ control MyEgress(inout headers hdr, inout metadata meta,
 {
     apply {
         // to prevent to reflect packet the same port of original ingress, just drop it
-        if(standard_metadata.egress_port == standard_metadata.ingress_port) {
+        if(meta.ingress_port == standard_metadata.egress_port) {
             mark_to_drop(standard_metadata);
         }
     }

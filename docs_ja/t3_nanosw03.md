@@ -36,7 +36,6 @@ PING 10.0.0.2 (10.0.0.2) 56(84) bytes of data.
 1 packets transmitted, 1 received, 0% packet loss, time 0ms
 rtt min/avg/max/mdev = 6.233/6.233/6.233/0.000 ms
 mininet> 
-
 ```
 
 以下に各ポートのモニタリング結果を示します。これもまた無駄なパケットの折り返しが抑制されていることが分かります。
@@ -67,8 +66,7 @@ mininet>
 このとき、以下のような表示が出ていることが確認できます。往復した二つのパケットがどちらも Packet-In 処理されていることが分かります。
 
 ```bash
-P4Runtime sh >>> PacketIn()                                                                                                                    
-
+P4Runtime sh >>> PacketIn()
 ........
 ======              <<<< 一つ目のパケットの処理
 packet-in: dst=00:00:00:00:00:02 src=00:00:00:00:00:01 port=b'\x00\x01'
@@ -83,11 +81,24 @@ packet-in: dst=00:00:00:00:00:01 src=00:00:00:00:00:02 port=b'\x00\x02'
 
 ### パケットの動き
 
-nanosw03.p4 には、幾つかの修正点があります。Packet-In 処理と Packet-Out 処理部分に分けて説明します。
+#### 概略
 
-#### Packet-In に関連する動き
+このスイッチは受け取ったパケットをすべてコントローラ経由で他のポートにフラッディングします。下の図は host 1 が出したパケットが、コントローラ経由で host 2, host 3 に送られるようすを示したものです。
 
-まず、l2_match_table テーブルの default_action が to_controller となりました。相変わらずフローテーブルは空なので、すべてのパケットが Controller に Packet-In されることになります。flooding action は使用しません。
+<img src="../packet_path.png" alt="attach:(packet path)" title="Packet Path" width="300">
+
+少し詳しく説明します。
+
+1. host 1 が出したパケットはコントローラに向けた Packet-In として出力する
+2. コントローラはこれにMulticastGroup id 1 を設定して、Packet-Out する
+3. スイッチはCPU_PORTからこれを受け取り、Multicastとして複製し、出力する
+4. ただし元々の入力ポート（port 1）と同じポートに出力することになったパケットはドロップする
+
+この動きを実現するために、nanosw03.p4 に幾つかの修正を加えました。パケットの流れに沿って説明します。
+
+#### Processing performed to Packet-In
+
+l2_match_table テーブルの default_action は to_controller であり、現在のところフローテーブルは空なので、すべてのパケットが Controller に Packet-In されることになります。flooding action は使用しません。
 
 ```C++
     action to_controller() {
@@ -109,43 +120,23 @@ nanosw03.p4 には、幾つかの修正点があります。Packet-In 処理と 
         default_action = to_controller;
     }
 ```
-この Packet-In 処理は先ほど置き換えた shell.py の中に実装されています。
+この Packet-In 処理は先ほど置き換えた shell.py の中に実装されています。以下に主要な部分だけ抜粋して示します。
 ```Python
 def packetin_process(pin):
     payload = pin.packet.payload
-    dstMac = payload[0:6]
-    srcMac = payload[6:12]
     port = pin.packet.metadata[0].value   # original ingres_port
-    print("\n======\npacket-in: dst={0} src={1} port={2}"
-            .format(mac2str(dstMac), mac2str(srcMac), port))
-
     mcast_grp = b'\x00\x01'   # caution, hardcoded multicast group
     payload = pin.packet.payload
     PacketOut(port, mcast_grp, payload)
     
 def PacketIn():
-    """
-    Reads a StreamMessageResponse from the server, then return it
-    """
-    try:
-        count = 0
         while True:
-            if count % 10 == 0:
-                print("")
-            count +=1
-            print(".", end="", flush=True)
             rep = client.get_stream_packet("packet", timeout=1)
             if rep is not None:
-                # print("\nResponse message is:")
-                # print(rep)
                 packetin_process(rep)
-                # return rep # if you want to check the response, just return 
-    except KeyboardInterrupt:
-        print("\nNothing (returned None)")
-        return None # nothing to do. just return.
 ```
 
-つまりPacketIn() 関数が StreamMessage Response を待ち受け、受信すると packetin_process() 関数を、引数に受け取った Packet-In パケットを与えて呼び出します。packetin_process() 関数は無条件に受け取ったパケットに、Multicast Group の情報(1) と、元の Ingress_port の情報をつけてPacketOut() 関数に渡します。
+つまりPacketIn() 関数が StreamMessage Response を待ち受け、受信すると受け取った Packet-In パケットを引数に与えて、packetin_process() 関数を呼び出します。packetin_process() 関数は無条件に受け取ったパケットに、Multicast Group の情報(1) と、元の Ingress_port の情報をつけてPacketOut() 関数に渡します。
 
 #### Packet-Out に関連する動き
 
@@ -179,7 +170,9 @@ def PacketOut(port, mcast_grp, payload):
 
 この PacketOut() 関数は、とても単純に packet_out ヘッダをセットしてスイッチに送り出すだけのものです。
 
-この追加された packet_out ヘッダ、つまり mcat_grp に反応するために、nanosw03.p4 側の Packet-Out 処理を修正しています。
+#### 受信したスイッチ側でのIngress処理
+
+スイッチ側はこの追加された packet_out ヘッダ、つまり mcat_grp に反応するために、nanosw03.p4 側の Packet-Out 処理を修正しています。
 元は以下のような記述でした。つまり Packet-Out （CPU_PORT から来たパケット）だったら、そこに指定された packet_out.egress_port に出力するだけのものです。
 
 ```C++
@@ -192,8 +185,17 @@ def PacketOut(port, mcast_grp, payload):
                 standard_metadata.egress_spec = hdr.packet_out.egress_port;
             } else { // broadcast to all port, or flood except specified port
                 standard_metadata.mcast_grp = hdr.packet_out.mcast_grp; // set multicast flag
-                standard_metadata.ingress_port = hdr.packet_out.egress_port; // store exception port
+                meta.ingress_port = hdr.packet_out.egress_port; // store exception port
             }
+```
+
+このために以下のようにユーザメタデータを用意しています。
+
+```C
+struct metadata {
+    bit<9> ingress_port;
+    bit<7> _pad;
+}
 ```
 
 つまり、
@@ -202,21 +204,42 @@ def PacketOut(port, mcast_grp, payload):
   - 出力先は packet_out.egress_port となる
 - もしMulticast Groupの指定があれば、
   -  マルチキャストの出力先としてそこを指定し、
-  - Ingress_port を packet_out.egress_port に書かれたポートとする
+  - ユーザメタデータである meta.ingress_port に、出力をドロップする対象となるポートの情報（packet_out.egress_port）を記録する
 
-特に最後の処理は重要かつ、いくらかトリッキーなものになっています。（ごめんなさい。フィールドを節約したかったんです。動作を確認したい人はこの次の節を読んで下さい。）
+特に最後の処理は重要かつ、いくらかトリッキーなものになっています。（ごめんなさい。フィールドを節約したかったんです。動作を確認したい人は下の補足を読んで下さい。）
+
+この結果、パケットは Replication Enigne によってすべてのポートに複製され、それぞれに対してEgress処理が行われます。
+
+#### スイッチ側でのEgress処理
+
+Egress 処理は簡単です。出力先が上で設定した除外ポートであれば、単に出力せずドロップします。それ以外のものはそのまま出力されます。
+
+```C
+        if(meta.ingress_port == standard_metadata.egress_port) {
+            mark_to_drop(standard_metadata);
+        }
+```
 
 
 
-スイッチプログラムの Egress 処理などは nanosw02.p4 と同じままです。これで「すべてのパケットがコントローラを介した Flooding となる」ことが分かるでしょうか。
+## ふぅ。
 
 この Tutorial では、Packet-In/Out を介したコントローラとの協調作業を試しました。もちろんこんなことをしていてはスイッチとしてまったく性能が出ません。次の Tutorial では、ちゃんとホストに対応するフロー・エントリを追加し、コントローラを介さないパケットの交換を実現するスイッチを作ります。
 
 
 
-### Packet-Out処理の実験
+### 補足：Packet-Out処理の実験
 
-上に書いたように、このスイッチのPacket-Out 処理に対するMulticast Group と egress_port の設定はいくらかトリッキーです。以下のようにして挙動を確認すると分かりやすいかもしれません。
+上に書いたように、このスイッチのPacket-Out 処理に対するMulticast Group と egress_port の設定はいくらかトリッキーです。
+
+- port 3 に出力するためには、以下のようにする
+  - hdr.packet_out.egress_port を 3 にする
+  - hdr.packet_out.mcast_grp を 0 にする（初期値が 0 ）
+- port 3 以外に出力する（Floodingする）ためには、以下のようにする
+  - hdr.packet_out.egress_port を 3 にする
+  - hdr.packet_out.mcast_grp を 1 にする
+
+実際に挙動を確認すると分かりやすいかもしれません。以下に方法を示します。
 
 #### port 3 に出力する Unicast 指定
 

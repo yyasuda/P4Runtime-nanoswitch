@@ -67,8 +67,7 @@ The monitoring results of each port are shown below. You can see that this also 
 At this time, you can see the following messages. You can see that both of the two packets that have been round tripped are processed in Packet-In.
 
 ```bash
-P4Runtime sh >>> PacketIn()                                                                                                                    
-
+P4Runtime sh >>> PacketIn()
 ........
 ======              <<<< 1st packet processing
 packet-in: dst=00:00:00:00:00:02 src=00:00:00:00:00:01 port=b'\x00\x01'
@@ -83,11 +82,24 @@ The following sections describe the behavior of the packet in this experiment.
 
 ### The behavior of the packet
 
-The nanosw03.p4, there are several fixes. This section describes the packet-in process and the packet-out process separately.
+#### A sketch
+
+This switch floods all received packets to other ports through the controller. The figure below shows that packets sent by host 1 are sent to host 2 and host 3 via the controller.
+
+<img src="packet_path.png" alt="attach:(packet path)" title="Packet Path" width="300">
+
+This section describes in some detail.
+
+1. The packet issued by host 1 is output as Packet-In to the controller
+2. The controller sets this to MulticastGroup id 1 and performs Packet-Out
+3. Switch receives this from CPU_PORT, duplicates as Multicast, and outputs
+4. However, packets that are output to the same port as the original input port (port 1) are dropped
+
+We made some modifications to nanosw03.p4 to achieve this. The explanation follows the flow of the packet.
 
 #### Processing associated with Packet-In
 
-First, the default_action for the l2_match_table is now to_controller. Since the flow table is still empty, all packets will be processed as Packet-In to the Controller. Here flooding action is not used.
+The default_action in the l2_match_table table is to_controller and the flow table is currently empty, so all packets will be packet-in to the controller. Here flooding action is not used.
 
 ```C++
     action to_controller() {
@@ -113,39 +125,19 @@ This Packet-In processing is implemented in the shell.py replaced earlier.
 ```Python
 def packetin_process(pin):
     payload = pin.packet.payload
-    dstMac = payload[0:6]
-    srcMac = payload[6:12]
     port = pin.packet.metadata[0].value   # original ingres_port
-    print("\n======\npacket-in: dst={0} src={1} port={2}"
-            .format(mac2str(dstMac), mac2str(srcMac), port))
-
     mcast_grp = b'\x00\x01'   # caution, hardcoded multicast group
     payload = pin.packet.payload
     PacketOut(port, mcast_grp, payload)
     
 def PacketIn():
-    """
-    Reads a StreamMessageResponse from the server, then return it
-    """
-    try:
-        count = 0
         while True:
-            if count % 10 == 0:
-                print("")
-            count +=1
-            print(".", end="", flush=True)
             rep = client.get_stream_packet("packet", timeout=1)
             if rep is not None:
-                # print("\nResponse message is:")
-                # print(rep)
                 packetin_process(rep)
-                # return rep # if you want to check the response, just return 
-    except KeyboardInterrupt:
-        print("\nNothing (returned None)")
-        return None # nothing to do. just return.
 ```
 
-That is, the PacketIn() function waits for a StreamMessage Response and then calls the packet_process() function with the Packet-In packet as an argument. The packet_process() function always passes the received packet to the PacketOut() function with the Multicast Group id (1) and the original Ingress_port information.
+The PacketIn () function waits for the StreamMessage Response, and upon receiving it, gives the received Packet-In packet as an argument and calls the packetin_process () function. The packet_process() function always passes the received packet to the PacketOut() function with the Multicast Group id (1) and the original Ingress_port information.
 
 #### Processing associated with Packet-Out
 
@@ -177,7 +169,11 @@ def PacketOut(port, mcast_grp, payload):
     client.stream_out_q.put(req)
 ```
 
-The PacketOut() function is very simple: it sets a packet_out header and sends it to the switch. The packet-out processing of nanosw03.p4 has been modified to respond to the added packet_out header, that is, mcat_grp.
+The PacketOut() function is very simple: it sets a packet_out header and sends it to the switch. 
+
+#### Ingress processing on the received switch side
+
+The packet-out processing on nanosw03.p4 had been modified to respond mcat_grp field of this expanded packet_out header.
 It was originally written as follows. That is, if it is a Packet-Out (Packets from CPU_PORT), it simply outputs to the specified packet_out.egress_port.
 
 ```C++
@@ -190,8 +186,17 @@ This is rewritten as follows.
                 standard_metadata.egress_spec = hdr.packet_out.egress_port;
             } else { // broadcast to all port, or flood except specified port
                 standard_metadata.mcast_grp = hdr.packet_out.mcast_grp; // set multicast flag
-                standard_metadata.ingress_port = hdr.packet_out.egress_port; // store exception port
+                meta.ingress_port = hdr.packet_out.egress_port; // store exception port
             }
+```
+
+For this purpose, user metadata is prepared as follows.
+
+```C
+struct metadata {
+    bit<9> ingress_port;
+    bit<7> _pad;
+}
 ```
 
 It is summarized as follows:
@@ -201,18 +206,42 @@ It is summarized as follows:
 - If a Multicast Group is specified,
   -  Specify that as the multicast output destination,
   - Set Ingress_port to the port written in packet_out.egress_port
+  - The information of packet_out.egress_port is recorded in meta.ingress_port which is user metadata (this is the port number to which the output will be dropped)
 
 In particular, the last step is important and somewhat tricky. (I'm sorry. I wanted to save the field. Read the next section if you want to see how it works.)
 
-The egress processing of the switch program remains the same as nanosw02.p4. Do you see that all packets are flooded through the controller?
+As a result, the packets are replicated to all ports by Replication Enigne, and egress processing is performed for each.
+
+#### Egress processing on the switch side
+
+The egress process is easy. If the output destination is the excluded port set above, simply drop it without outputting. Others are output as is.
+
+```C
+        if(meta.ingress_port == standard_metadata.egress_port) {
+            mark_to_drop(standard_metadata);
+        }
+```
+
+
+
+## Phew...
 
 In this tutorial, we tried to work with the controller via Packet-In / Out. Of course you do not get the performance of the switch in such a way. In the next tutorial, you add flow entries that correspond properly to the host and creates a switch that allows packet exchange without the controller.
 
 
 
-### To verify the operation of the Packet-Out process
+### Appendix: To verify the operation of the Packet-Out process
 
-As mentioned above, setting the Multicast Group and egress_port for this switch's Packet-Out processing is somewhat tricky. It may be easy to understand if you check the behavior as follows.
+As mentioned above, setting the Multicast Group and egress_port for this switch's Packet-Out processing is somewhat tricky.
+
+- To output to port 3
+  - Set hdr.packet_out.egress_port to 3
+  - Set hdr.packet_out.mcast_grp to 0 (initial value is 0)
+- To output to a port other than port 3 (as Flooding), do as follows
+  - Set hdr.packet_out.egress_port to 3
+  - Set hdr.packet_out.mcast_grp to 1
+
+It may be easier to understand if you actually check the behavior. The method is shown below.
 
 #### Unicast specified to be output to port 3
 
