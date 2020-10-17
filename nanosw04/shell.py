@@ -2388,7 +2388,7 @@ def packetin_process(pin):
             insertFlowEntry(srcMac, dstMac, macTable[ srcMac ])
             # send to appropriate port
             port = macTable[ dstMac ]
-            mcast_grp = b'\x00' # no Multicast
+            mcast_grp = b'\x00\x00' # no Multicast
         else:
             # send to all (except original ingress port)
             mcast_grp = FLOOD_GRP 
