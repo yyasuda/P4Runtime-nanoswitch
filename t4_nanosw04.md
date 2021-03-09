@@ -123,7 +123,8 @@ action {
   }
 }
 
-P4Runtime sh >>>
+<<<< It is good idea to delete entires as follows, to see this behavior again.
+P4Runtime sh >>> table_entry["MyIngress.l2_match_table"].read(lambda a: a.delete())                                                                                                          
 ```
 ### Packet round trip and flow table contents
 

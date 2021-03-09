@@ -123,7 +123,9 @@ action {
   }
 }
 
-P4Runtime sh >>>
+<<<< 以下のようにテーブルの中身を削除してから、もう一度挙動を見ると良い。
+P4Runtime sh >>> table_entry["MyIngress.l2_match_table"].read(lambda a: a.delete())                                                                                                          
+
 ```
 ### パケットの往復とフロー・テーブルの内容
 
