@@ -23,6 +23,20 @@ P4Runtime sh >>> PacketIn()
 
 ......
 ```
+#### 身に覚えの無いパケット
+
+ひょっとすると、あなたの環境では PacketIn() しただけで、以下のようなパケットが来たぞ、という表示になるかもしれません。
+```bash
+======
+packet-in: dst=33:33:00:00:00:02 src=00:00:00:00:00:03 port=3
+macTable (mac - port)
+ 00:00:00:00:00:03 - port(3)
+ 00:00:00:00:00:02 - port(2)
+ 00:00:00:00:00:01 - port(1)
+.....
+```
+
+33:33:00:00:00:02 は IPv6 が Router Solcitation などの処理に用いるMulticast MACアドレスです。このTutorialでは無視してしまいましょう。
 
 #### Mininet 側操作
 
@@ -187,6 +201,7 @@ def PacketOut(port, mcast_grp, payload):
                 standard_metadata.mcast_grp = hdr.packet_out.mcast_grp; // set multicast flag
                 meta.ingress_port = hdr.packet_out.egress_port; // store exception port
             }
+            hdr.packet_out.setInvalid();
 ```
 
 このために以下のようにユーザメタデータを用意しています。

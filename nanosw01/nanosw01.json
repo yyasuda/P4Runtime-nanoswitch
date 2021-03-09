@@ -251,11 +251,11 @@
       "id" : 0,
       "source_info" : {
         "filename" : "nanosw01.p4",
-        "line" : 171,
+        "line" : 172,
         "column" : 8,
         "source_fragment" : "MyDeparser"
       },
-      "order" : ["packet_in", "ethernet", "ipv4"],
+      "order" : ["packet_out", "packet_in", "ethernet", "ipv4"],
       "primitives" : []
     }
   ],
@@ -268,7 +268,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "nanosw01.p4",
-        "line" : 153,
+        "line" : 154,
         "column" : 12,
         "source_fragment" : "update_checksum( ..."
       },
@@ -441,7 +441,7 @@
       ]
     },
     {
-      "name" : "nanosw01l135",
+      "name" : "nanosw01l136",
       "id" : 3,
       "runtime_data" : [],
       "primitives" : [
@@ -459,7 +459,7 @@
           ],
           "source_info" : {
             "filename" : "nanosw01.p4",
-            "line" : 135,
+            "line" : 136,
             "column" : 12,
             "source_fragment" : "standard_metadata.egress_spec = hdr.packet_out.egress_port"
           }
@@ -474,7 +474,7 @@
           ],
           "source_info" : {
             "filename" : "nanosw01.p4",
-            "line" : 136,
+            "line" : 137,
             "column" : 12,
             "source_fragment" : "hdr.packet_out.setInvalid()"
           }
@@ -495,11 +495,11 @@
       "init_table" : "node_2",
       "tables" : [
         {
-          "name" : "tbl_nanosw01l135",
+          "name" : "tbl_nanosw01l136",
           "id" : 0,
           "source_info" : {
             "filename" : "nanosw01.p4",
-            "line" : 135,
+            "line" : 136,
             "column" : 42,
             "source_fragment" : "= hdr.packet_out.egress_port; ..."
           },
@@ -511,10 +511,10 @@
           "support_timeout" : false,
           "direct_meters" : null,
           "action_ids" : [3],
-          "actions" : ["nanosw01l135"],
+          "actions" : ["nanosw01l136"],
           "base_default_next" : null,
           "next_tables" : {
-            "nanosw01l135" : null
+            "nanosw01l136" : null
           },
           "default_entry" : {
             "action_id" : 3,
@@ -575,7 +575,7 @@
           "id" : 0,
           "source_info" : {
             "filename" : "nanosw01.p4",
-            "line" : 130,
+            "line" : 131,
             "column" : 10,
             "source_fragment" : "standard_metadata.ingress_port == 255"
           },
@@ -593,7 +593,7 @@
               }
             }
           },
-          "true_next" : "tbl_nanosw01l135",
+          "true_next" : "tbl_nanosw01l136",
           "false_next" : "node_4"
         },
         {
@@ -601,7 +601,7 @@
           "id" : 1,
           "source_info" : {
             "filename" : "nanosw01.p4",
-            "line" : 138,
+            "line" : 139,
             "column" : 16,
             "source_fragment" : "hdr.ethernet.isValid()"
           },
@@ -626,7 +626,7 @@
       "id" : 1,
       "source_info" : {
         "filename" : "nanosw01.p4",
-        "line" : 145,
+        "line" : 146,
         "column" : 8,
         "source_fragment" : "MyEgress"
       },
@@ -642,7 +642,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "nanosw01.p4",
-        "line" : 153,
+        "line" : 154,
         "column" : 12,
         "source_fragment" : "update_checksum( ..."
       },

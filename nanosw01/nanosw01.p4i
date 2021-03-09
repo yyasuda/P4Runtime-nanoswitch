@@ -914,7 +914,8 @@ control MyIngress(inout headers hdr, inout metadata meta,
             flooding;
         }
         size = 1024;
-        default_action = flooding; // = to_controller;
+        // default_action = to_controller;
+        default_action = flooding; // all packets go flooding;
     }
 
     apply {
@@ -962,6 +963,7 @@ control MyComputeChecksum(inout headers hdr, inout metadata meta) {
 control MyDeparser(packet_out packet, in headers hdr)
 {
     apply {
+        packet.emit(hdr.packet_out);
         packet.emit(hdr.packet_in);
         packet.emit(hdr.ethernet);
         packet.emit(hdr.ipv4);

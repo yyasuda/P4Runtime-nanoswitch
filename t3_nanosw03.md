@@ -23,6 +23,19 @@ P4Runtime sh >>> PacketIn()
 
 ......
 ```
+#### Packets you don't know
+
+You might see the following packets displaying;
+```bash
+======
+packet-in: dst=33:33:00:00:00:02 src=00:00:00:00:00:03 port=3
+macTable (mac - port)
+ 00:00:00:00:00:03 - port(3)
+ 00:00:00:00:00:02 - port(2)
+ 00:00:00:00:00:01 - port(1)
+.....
+```
+33:33:00:00:00:02 is the Multicast MAC address that IPv6 uses for processing Router Solicitation or some. Let us just ignore them in this tutorial.
 
 #### Mininet operation
 

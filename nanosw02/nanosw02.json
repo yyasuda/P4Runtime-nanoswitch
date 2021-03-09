@@ -255,7 +255,7 @@
         "column" : 8,
         "source_fragment" : "MyDeparser"
       },
-      "order" : ["packet_in", "ethernet", "ipv4"],
+      "order" : ["packet_out", "packet_in", "ethernet", "ipv4"],
       "primitives" : []
     }
   ],
