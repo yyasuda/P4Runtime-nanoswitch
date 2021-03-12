@@ -57,7 +57,12 @@ Create a host table on the controller side to correspond to known hosts.
 - Add round-trip entries to the flow table for communication with known host pairs
 - From now on, the switch will forward the round-trip packet without the controller
 
+### Tutorial 5: [NanoSwitch05](./t5_nanosw05.md)
 
+Add the broadcast process, which has been ignored in nanosw04
+
+- When the broadcast comes out, add the corresponding entry to the flow table
+- By supporting ARP, it will behave more like a normal switch
 
 ## Next Step
 
