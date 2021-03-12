@@ -260,10 +260,11 @@ def insertFlowEntry(dstMac, srcMac, port):
 
 またcontroller packet metadata を扱うための関数群が含まれていなかったので、それらについてもcontext.py に追加しています。packetin_process() 関数から呼び出される metadata_value() 関数などで使われています。
 
-
-
 これで一連のチュートリアルが完了しました。お疲れさまでした。
+
+
 
 ## Next Step
 
-次は[ここ](README.md#next-step)でしょうか。
+#### Tutorial 5: [NanoSwitch05](t5_nanosw05.md)
+
