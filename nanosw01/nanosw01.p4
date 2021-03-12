@@ -123,7 +123,6 @@ control MyIngress(inout headers hdr, inout metadata meta,
             flooding;
         }
         size = 1024;
-        // default_action = to_controller;
         default_action = flooding; // all packets go flooding;
     }
 
