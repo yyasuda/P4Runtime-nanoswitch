@@ -2363,6 +2363,7 @@ def metadata_value(repeated_metadata, cpm_name, metadata_name):
     return None
 
 def packetin_process(pin):
+    global macTable
     """
     packet-in processing
     1. send back it as flooding-packet
