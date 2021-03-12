@@ -129,7 +129,7 @@ control MyIngress(inout headers hdr, inout metadata meta,
     }
 
     apply {
-      if (standard_metadata.ingress_port == CPU_PORT) {
+        if (standard_metadata.ingress_port == CPU_PORT) {
             // Packet received from CPU_PORT, this is a packet-out sent by the
             // controller. Skip table processing, set the egress port as
             // requested by the controller (packet_out header) and remove the
