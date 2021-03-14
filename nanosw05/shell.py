@@ -2352,6 +2352,23 @@ def insertFlowEntry(dstMac, srcMac, port):
     # print(req)
     client.write(req)
 
+def printTableEntry(te): 
+    print("  dst={0} src={1} action={2}".format( 
+        mac2str(te.match._mk['hdr.ethernet.dstAddr'].exact.value),  
+        mac2str(te.match._mk['hdr.ethernet.srcAddr'].exact.value), 
+        te.action.action_name), end="")
+    if len(te.action.msg().params) != 0:
+        print(" (", end="")
+        for idx, item in enumerate(te.action.msg().params):
+            print(" ", end="")
+            print(int.from_bytes(item.value, 'big'), end="")
+        print(" )", end="")
+    print("")
+
+def PrintTable(table):
+    print("{0}".format(table))
+    TableEntry(table).read(lambda te: printTableEntry(te)) 
+    
 # macTable = [ mac: port ] - store mac and port of source host
 macTable = {}
 
