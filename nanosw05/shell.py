@@ -2662,6 +2662,7 @@ def main():
         "Watch": Watch,
         "PacketIn": PacketIn,
         "PacketOut": PacketOut,
+        "PrintTable": PrintTable,
         "client": client,
         "context": context,
         "Test": Test,
