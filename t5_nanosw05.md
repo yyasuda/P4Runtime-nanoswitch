@@ -88,7 +88,7 @@ P4Runtime sh >>>
 We made a PrintTable() function to check the flow entry registered in the l2_match_table. Will the contents of the flow entries are displayed in the following manner. At this timing, three entries should be registered in the table. The first is for flooding the broadcast, and the other two are entries for forwarding packet round trips between h1 and h2.
 
 ```bash
-P4Runtime sh >>> PrintTable("MyIngress.l2_match_table")                                                                                         
+P4Runtime sh >>> PrintTable()                                                                                         
 MyIngress.l2_match_table
   dst=ff:ff:ff:ff:ff:ff src=00:00:00:00:00:01 action=MyIngress.flooding
   dst=00:00:00:00:00:01 src=00:00:00:00:00:02 action=MyIngress.forward ( 1 )

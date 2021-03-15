@@ -147,7 +147,7 @@ P4RuntimeWriteException: Error(s) during Write:
 If you check the flow entry content just to be sure, it has been set to flooding for broadcast packet is registered correctly.
 
 ```bash
-P4Runtime sh >>> PrintTable("MyIngress.l2_match_table")                                                                                         
+P4Runtime sh >>> PrintTable()                                                                                         
 MyIngress.l2_match_table
   dst=ff:ff:ff:ff:ff:ff src=00:00:00:00:00:01 action=MyIngress.flooding
 
