@@ -24,7 +24,7 @@ These experiments are performed in the following environments:
 - Use Mininet corresponding to P4 Runtime as switch
 - Use open source p4c for P4 compilation
 
-If you skip the tutorial, try [shortcut](./ta_cheatsheep.md).
+If you skip the tutorial, try [shortcut](./ta_cheatsheet.md).
 
 
 
