@@ -88,7 +88,7 @@ P4Runtime sh >>>
 l2_match_table に登録されたフロー・エントリを確認するための PrintTable() 関数を作りました。フロー・エントリの内容が以下のように表示されるでしょう。このタイミングではテーブルには三つのエントリが登録されているはずです。一つめがブロードキャストを flooding するためもので、残りの二つが h1, h2 間のパケット往復について forward するためのエントリーです。
 
 ```bash
-P4Runtime sh >>> PrintTable("MyIngress.l2_match_table")                                                                                         
+P4Runtime sh >>> PrintTable()                                                                                         
 MyIngress.l2_match_table
   dst=ff:ff:ff:ff:ff:ff src=00:00:00:00:00:01 action=MyIngress.flooding
   dst=00:00:00:00:00:01 src=00:00:00:00:00:02 action=MyIngress.forward ( 1 )

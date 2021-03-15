@@ -147,7 +147,7 @@ P4RuntimeWriteException: Error(s) during Write:
 念のためにフロー・エントリ内容を確認すると、正しくブロードキャストパケットを flooding する設定が登録されています。
 
 ```bash
-P4Runtime sh >>> PrintTable("MyIngress.l2_match_table")                                                                                         
+P4Runtime sh >>> PrintTable()                                                                                         
 MyIngress.l2_match_table
   dst=ff:ff:ff:ff:ff:ff src=00:00:00:00:00:01 action=MyIngress.flooding
 
