@@ -23,6 +23,8 @@ A Simple L2 lerning switch development tutorial on P4Runtime
 - スイッチ役には P4Runtime に対応した Mininet を用いる
 - P4 コンパイルにはオープンソースの p4c を用いる
 
+もしチュートリアルをスキップしたい人には [近道](./ta_cheatsheep.md) があります。
+
 
 
 ## Step by Step
