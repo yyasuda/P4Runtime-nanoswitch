@@ -64,11 +64,15 @@ Add the broadcast process, which has been ignored in nanosw04
 - When the broadcast comes out, add the corresponding entry to the flow table
 - By supporting ARP, it will behave more like a normal switch
 
+### Tutorial 6: [NanoSwitch06](./t6_nanosw06.md)
+
+Corresponds to the error when the entry could not be added to the flow table in time
+
+- Ignore the error if double registration occurs
+
 ## Next Step
 
 The Switch I designed has priority on making the P4 Runtime easy to understand and try out. So it's pretty imperfect in terms of functionality, and there are several issues that come to mind. Why don't you add them yourself?
-
-- It takes time to create a flow entry in response to a Packet-In from an unknown packet addressed to host X. If another packet is sent to the same host X before the entry is made, the controller will attempt to INSERT twice and make an error.
 
 -  In actual switch operation, it is common to replace host X from port 1 to port 2 on the same switch. However, this switch does not handle this and packets cannot go back and forth.
 

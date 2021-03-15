@@ -82,75 +82,19 @@ Nothing (returned None)
 
 P4Runtime sh >>> 
 ```
-以下のようにして l2_match_table に登録されたフロー・エントリを確認することもできます。このタイミングではテーブルには三つのエントリが登録されているはずです。一つめがブロードキャストを flooding するためもので、残りの二つが h1, h2 間のパケット往復について forward するためのエントリーです。
+
+#### PrintTable()
+
+l2_match_table に登録されたフロー・エントリを確認するための PrintTable() 関数を作りました。フロー・エントリの内容が以下のように表示されるでしょう。このタイミングではテーブルには三つのエントリが登録されているはずです。一つめがブロードキャストを flooding するためもので、残りの二つが h1, h2 間のパケット往復について forward するためのエントリーです。
 
 ```bash
-P4Runtime sh >>> table_entry["MyIngress.l2_match_table"].read(lambda te: print(te))    
-            ...:                                                                                                                                                                                                    
-table_id: 33609159 ("MyIngress.l2_match_table")
-match {
-  field_id: 1 ("hdr.ethernet.dstAddr")
-  exact {
-    value: "\\xff\\xff\\xff\\xff\\xff\\xff" <<< 宛先がブロードキャストで
-  }
-}
-match {
-  field_id: 2 ("hdr.ethernet.srcAddr")
-  exact {
-    value: "\\x00\\x00\\x00\\x00\\x00\\x01" <<< 送信元が h1
-  }
-}
-action {
-  action {
-    action_id: 16837454 ("MyIngress.flooding")  <<<< action に flooding が設定されている
-  }
-}
+P4Runtime sh >>> PrintTable("MyIngress.l2_match_table")                                                                                         
+MyIngress.l2_match_table
+  dst=ff:ff:ff:ff:ff:ff src=00:00:00:00:00:01 action=MyIngress.flooding
+  dst=00:00:00:00:00:01 src=00:00:00:00:00:02 action=MyIngress.forward ( 1 )
+  dst=00:00:00:00:00:02 src=00:00:00:00:00:01 action=MyIngress.forward ( 2 )
 
-table_id: 33609159 ("MyIngress.l2_match_table")
-match {
-  field_id: 1 ("hdr.ethernet.dstAddr")
-  exact {
-    value: "\\x00\\x00\\x00\\x00\\x00\\x01" <<< 宛先が h1
-  }
-}
-match {
-  field_id: 2 ("hdr.ethernet.srcAddr")
-  exact {
-    value: "\\x00\\x00\\x00\\x00\\x00\\x02" <<< 送信元が h2
-  }
-}
-action {
-  action {
-    action_id: 16838673 ("MyIngress.forward") <<<< action は forward to port 1
-    params {
-      param_id: 1 ("port")
-      value: "\\x00\\x01"
-    }
-  }
-}
-
-table_id: 33609159 ("MyIngress.l2_match_table")
-match {
-  field_id: 1 ("hdr.ethernet.dstAddr")
-  exact {
-    value: "\\x00\\x00\\x00\\x00\\x00\\x02" <<< 宛先が h2
-  }
-}
-match {
-  field_id: 2 ("hdr.ethernet.srcAddr")
-  exact {
-    value: "\\x00\\x00\\x00\\x00\\x00\\x01" <<< 送信元が h1
-  }
-}
-action {
-  action {
-    action_id: 16838673 ("MyIngress.forward") <<<< action は forward to port 2
-    params {
-      param_id: 1 ("port")
-      value: "\\x00\\x02"
-    }
-  }
-}
+P4Runtime sh >>>     
 
 <<<< 以下のようにテーブルの中身を削除してから、もう一度挙動を見ると良い。
 P4Runtime sh >>> table_entry["MyIngress.l2_match_table"].read(lambda a: a.delete())                                                                                                          
@@ -254,7 +198,7 @@ def insertFlowEntry(dstMac, srcMac, port):
 
 つまりpacketin_process() 関数が、受け取ったパケットがブロードキャストであれば、ポート番号を（Floodingすべき処理の目印である）FLOOD_PORT として insertFlowEntry() を呼び出します。そこではポート番号がFLOOD_PORTであれば、action として flooding をつけてフロー・エントリをセットします。もしブロードキャストででなければポート番号は入力ポートとなり、insertFlowEntry() 内では、action として forward をつけてフロー・エントリをセットします。
 
-いずれにせよ、宛先ホストが存在するポートが判明していた場合は Unicast の指定と、当該ポートの情報をつけて。そうで無い場合（ブロードキャストあるいは宛先ホストのポート不明）はMulticast Group の情報(1) と、元の Ingress_port の情報をつけて、PacketOut() 関数を呼び出します。
+宛先ホストが存在するポートが判明していた場合は Unicast の指定と、当該ポートの情報をつけて PacketOut() 関数を呼び出します。そうで無い、つまりブロードキャストあるいは宛先ホストのポートが不明の場合は Multicast Group の情報(1) と、元の Ingress_port の情報をつけて PacketOut() 関数を呼び出します。
 
 #### エントリ設定前後での ping 処理時間
 
@@ -275,8 +219,7 @@ mininet>
 
 
 
-これで一連のチュートリアルが完了しました。お疲れさまでした。
-
 ## Next Step
 
-次は[ここ](README.md#next-step)でしょうか。
+#### Tutorial 5: [NanoSwitch06](t6_nanosw06.md)
+

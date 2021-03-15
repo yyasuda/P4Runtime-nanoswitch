@@ -60,7 +60,7 @@ mininet>
 ```
 #### P4 RuntimeShell operation
 
-At this time, you can see the following messages. 最初の二つのパケットまでが Packet-In でコントローラに戻されており、二つ目の Packet-In 処理でフロー・エントリが設定されて以降はコントローラに Packet-In されることがなくなっています。
+At this time, you can see the following messages. Up to the first two packets are Packet-In back to the controller. After the flow entry is set in the second Packet-In process, it is no longer Packet-In to the controller.
 ```bash
 P4Runtime sh >>> PacketIn()
 
@@ -83,75 +83,18 @@ Nothing (returned None)
 
 P4Runtime sh >>> 
 ```
-You can also check the flow entries registered in l2_match_table as follows: At this timing, three entries should be registered in the table. The first is for flooding the broadcast, and the other two are entries for forwarding packet round trips between h1 and h2.
+#### PrintTable()
+
+We made a PrintTable() function to check the flow entry registered in the l2_match_table. Will the contents of the flow entries are displayed in the following manner. At this timing, three entries should be registered in the table. The first is for flooding the broadcast, and the other two are entries for forwarding packet round trips between h1 and h2.
 
 ```bash
-P4Runtime sh >>> table_entry["MyIngress.l2_match_table"].read(lambda te: print(te))    
-            ...:                                                                                                                                                                                                    
-table_id: 33609159 ("MyIngress.l2_match_table")
-match {
-  field_id: 1 ("hdr.ethernet.dstAddr")
-  exact {
-    value: "\\xff\\xff\\xff\\xff\\xff\\xff" <<< destination is the broadcast 
-  }
-}
-match {
-  field_id: 2 ("hdr.ethernet.srcAddr")
-  exact {
-    value: "\\x00\\x00\\x00\\x00\\x00\\x01" <<< source is h1
-  }
-}
-action {
-  action {
-    action_id: 16837454 ("MyIngress.flooding")  <<<< set flooding to action
-  }
-}
+P4Runtime sh >>> PrintTable("MyIngress.l2_match_table")                                                                                         
+MyIngress.l2_match_table
+  dst=ff:ff:ff:ff:ff:ff src=00:00:00:00:00:01 action=MyIngress.flooding
+  dst=00:00:00:00:00:01 src=00:00:00:00:00:02 action=MyIngress.forward ( 1 )
+  dst=00:00:00:00:00:02 src=00:00:00:00:00:01 action=MyIngress.forward ( 2 )
 
-table_id: 33609159 ("MyIngress.l2_match_table")
-match {
-  field_id: 1 ("hdr.ethernet.dstAddr")
-  exact {
-    value: "\\x00\\x00\\x00\\x00\\x00\\x01" <<< destination is h1
-  }
-}
-match {
-  field_id: 2 ("hdr.ethernet.srcAddr")
-  exact {
-    value: "\\x00\\x00\\x00\\x00\\x00\\x02" <<< souce is h2
-  }
-}
-action {
-  action {
-    action_id: 16838673 ("MyIngress.forward") <<<< set foward to action with port 1
-    params {
-      param_id: 1 ("port")
-      value: "\\x00\\x01"
-    }
-  }
-}
-
-table_id: 33609159 ("MyIngress.l2_match_table")
-match {
-  field_id: 1 ("hdr.ethernet.dstAddr")
-  exact {
-    value: "\\x00\\x00\\x00\\x00\\x00\\x02" <<< destination is h2
-  }
-}
-match {
-  field_id: 2 ("hdr.ethernet.srcAddr")
-  exact {
-    value: "\\x00\\x00\\x00\\x00\\x00\\x01" <<< source is h1
-  }
-}
-action {
-  action {
-    action_id: 16838673 ("MyIngress.forward") <<<< set foward to action with port 2
-    params {
-      param_id: 1 ("port")
-      value: "\\x00\\x02"
-    }
-  }
-}
+P4Runtime sh >>>     
 
 <<<< It is good idea to delete entires as follows, to see this behavior again.
 P4Runtime sh >>> table_entry["MyIngress.l2_match_table"].read(lambda a: a.delete())                                                                                                          
@@ -254,9 +197,7 @@ def insertFlowEntry(dstMac, srcMac, port):
 
 That is, the packetin_process() function calls insertFlowEntry() with the port number as FLOOD_PORT (which marks the process to be flooded) if the received packet is a broadcast. If where a port number is FLOOD_PORT, sets the flow entry with the flooding as action. If it is not broadcast, the port number will be the ingress port, and in insertFlowEntry(), set the flow entry with forward as action.
 
-いずれにせよ、宛先ホストが存在するポートが判明していた場合は Unicast で当該ポートの情報をつけて、そうで無い場合（ブロードキャストあるいは宛先ホストのポート不明）はMulticast Group の情報(1) と、元の Ingress_port の情報をつけてPacketOut() 関数に渡します。
-
-In any case, if the port where the destination host exists is known, specify the Unicast with target port, if not, (the destination is broadcast or host port unknown), specify the Multicast with Group information(1) and the original Ingress_port information, then call PacketOut() function 
+If the port where the destination host exists is known, specify Unicast and call the PacketOut () function with the information of that port. If this is not the case, that is, if the broadcast or destination host port is unknown, call the PacketOut () function with the Multicast Group information (1) and the original Ingress_port information.
 
 #### Ping processing time before and after entry setting
 
