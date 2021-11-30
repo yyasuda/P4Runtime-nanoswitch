@@ -2365,9 +2365,14 @@ def printTableEntry(te):
         print(" )", end="")
     print("")
 
-def PrintTable(table):
-    print("{0}".format(table))
-    TableEntry(table).read(lambda te: printTableEntry(te)) 
+def PrintTable(tableArg=None):
+    if tableArg is None:
+        tables = context.p4info.tables
+    else:
+        tables = [ tableArg ]
+    for table in tables:
+        print("{0}".format(table.preamble.name))
+        TableEntry(table.preamble.name).read(lambda te: printTableEntry(te))
     
 # macTable = [ mac: port ] - store mac and port of source host
 macTable = {}
