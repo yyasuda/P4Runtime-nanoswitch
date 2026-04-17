@@ -225,7 +225,7 @@ def insertFlowEntry(dstMac, srcMac, port):
             raise e
 ```
 つまり単純に二重登録になったエラーについては（念のために）メッセージだけ出して、それを無視するのです。ALREADY_EXISTS エラー以外はそのままエラーとして raise します。
-なおこのコード追加のために、以下の2行を shell.py 冒頭に追加しています。
+なおこのコード追加のために、以下の2行を tutorial.py 冒頭に追加しています。
 
 ```python
 from p4runtime_sh.p4runtime import P4RuntimeWriteException
@@ -234,7 +234,7 @@ from google.rpc import status_pb2, code_pb2
 
 #### 修正後のP4Runtime Shell 側での表示
 
-ではここで、修正を加えた shell.py （つまりこの nanosw06 ディレクトリにあるもの）を使って、P4Runtime Shell を再起動し、再び Mininet 側で double_send.py を実行してください。以下のような表示になり、二重登録が発生しているものの、プログラムは停止しないことが確認できます。
+ではここで、修正を加えた tutorial.py （つまりこの nanosw06 ディレクトリにあるもの）を使って、P4Runtime Shell を再起動し、再び Mininet 側で double_send.py を実行してください。以下のような表示になり、二重登録が発生しているものの、プログラムは停止しないことが確認できます。
 
 ```bash
 P4Runtime sh >>> tutorial.controller_daemon(packet_in, tutorial.my_packetin)
