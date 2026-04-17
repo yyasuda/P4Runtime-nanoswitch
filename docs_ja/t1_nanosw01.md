@@ -6,7 +6,7 @@
 
 #### P4Runtime Shell 側操作
 
-ここでは Multicast Group の設定を行います。P4Runtime の MulticastGroupEntry を利用することで、一つのパケットを複数のポートに複製して出力することができます。
+ここでは Multicast Group の設定を行います。P4Runtime の MulticastGroupEntry を利用することで、一つのパケットを複数のポートに複製して出力することができます。なお、これ以降の操作は、[Tutorial 0:](t0_nanosw00.md) ですでに nanosw01 プログラムを使って Mininet と接続できていることを前提としています。
 
 たとえばスイッチ s1 は port 1, 2, 3 の三つのポートを持っています。これらをすべて一つの Multicast Group に登録し、パケットの出力先をこの Multicast Group にすることで、いわゆる Flooding が行われます。
 
@@ -16,7 +16,7 @@
 P4Runtime sh >>> me = MulticastGroupEntry(1)
 
 P4Runtime sh >>> me.add(1).add(2).add(3)
-Out[6]: 
+Out[3]: 
 multicast_group_entry {
   multicast_group_id: 1
   replicas {
@@ -35,27 +35,15 @@ P4Runtime sh >>> me.insert()
 P4Runtime sh >>> 
 ```
 
-なお上の操作の最初の二行は、以下のようにまとめて一行に書くこともできます。また、```me.read()``` によって登録した内容を確認することができます。
+なお上の操作の最初の二行は、以下のようにまとめて一行に書くこともできます。（本来なら ```me.read()``` によって登録した内容を確認することができるはずなのですが、この操作はエラーになります）
 
 ```bash
 P4Runtime sh >>> me = MulticastGroupEntry(1).add(1).add(2).add(3)
 
-P4Runtime sh >>> me.insert()                                                                                                                   
+P4Runtime sh >>> me.insert()
 
-P4Runtime sh >>> me.read()                                                                                                                     
-Out[4]: 
-multicast_group_entry {
-  multicast_group_id: 1
-  replicas {
-    egress_port: 1
-  }
-  replicas {
-    egress_port: 2
-  }
-  replicas {
-    egress_port: 3
-  }
-}
+P4Runtime sh >>> me.read()
+Out[6]: <p4runtime_sh.shell._EntityBase.read.<locals>._EntryIterator at 0x7fffd86bb0a0>
 
 P4Runtime sh >>> 
 ```
@@ -77,12 +65,12 @@ mininet>
 但しこのとき、tcpdump などでスイッチのポートを見張っていると、過剰にパケットが跳ね返されていることが確認できるでしょう。tcpdump は以下のようにして起動するのが簡単です。
 
 ```bash
-$ docker ps | grep p4mn 
-d481bf29d905        opennetworking/p4mn   "mn --custom bmv2.py…"   6 minutes ago       Up 6 minutes        0.0.0.0:50001->50001/tcp, 50002-50999/tcp   great_carson
-$ docker exec -it d481bf29d905 /bin/bash
-root@d481bf29d905:~# tcpdump -i s1-eth1      <<<< s1 と h1 の間の経路をモニタリングする
-tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
-listening on s1-eth1, link-type EN10MB (Ethernet), capture size 262144 bytes
+$ docker ps | grep p4mn
+3d1e484badb8   yutakayasuda/p4mn     "/root/run-p4mn.sh -…"   27 minutes ago   Up 27 minutes   0.0.0.0:50001->50001/tcp, [::]:50001->50001/tcp   kind_gagarin
+$ docker exec -it 3d1e484badb8 /bin/bash
+root@3d1e484badb8:/tmp# tcpdump -i s1-eth1     <<<< s1 と h1 の間の経路をモニタリングする
+tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
+listening on s1-eth1, link-type EN10MB (Ethernet), snapshot length 262144 bytes
 (waiting...)
 ```
 

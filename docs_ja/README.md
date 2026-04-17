@@ -84,15 +84,7 @@ nanosw04では無視していたブロードキャスト処理を追加します
 
 ## Appendix
 
-### 改造版 P4Runtime Shell
-
-今回のチュートリアルは P4Runtime Shell に機能を追加しながら行いました。私の手元で使っていた[改造版 P4Runtime Shell](https://github.com/yyasuda/p4runtime-shell) を公開しています。Dockerfile.dev をオリジナル・バージョンと見比べれば、どこを改造したか分かると思います。これを Tutorial0: [実験環境の準備](t0_prepare.md) で示した方法で作成した [Docker Image](https://hub.docker.com/r/yutakayasuda/p4runtime-shell-dev) も公開しています。
-
-そこには今回のチュートリアルで利用した機能がすべて含まれている上に、ここでは紹介しなかった機能もあります。興味のある方は以下のリンクを見て下さい。
-
-- [改造版 P4Runtime Shell に追加したその他の機能](ta_p4rt-sh-misc.md)
-
-### RAW パケットの送信
+- RAW パケットの送信
 
 Mininet では ping などのツールがあり、ARP などを生じさせずに簡単にパケットを送信できますが、たとえば Wedge Switch など実機を使った実験などでは、Wedge 自身 (OpenNetworkLinux) あるいは Wedge のポートに接続した Windows/Mac などから任意のパケットを送信したくなるでしょう。そうした場合のツールを置いておきます。
 

@@ -14,24 +14,27 @@
 
 #### P4Runtime Shell 側操作
 
-一旦 P4Runtime Shell の実行を終わり、機能追加された shell.py と置き換えます。
+今回はスイッチプログラムに変更はなく、同じ nanosw03 スイッチプログラムを使いますが、tutorial.py は nanosw04 ディレクトリにあるものを使います。
+
+まず一旦 P4Runtime Shell の実行を終わり、nanosw04 以下にある nanosw03 スイッチプログラムを使って P4Runtime Shell を再起動してください。
 
 ```python
 P4Runtime sh >>> exit
-(venv) root@1923f14d3a08:/tmp/nanosw03# cd ../nanosw04
-(venv) root@1923f14d3a08:/tmp/nanosw04# cp shell.py /p4runtime-sh/p4runtime_sh/shell.py 
-(venv) root@1923f14d3a08:/tmp/nanosw04# cp context.py /p4runtime-sh/p4runtime_sh/context.py 
-(venv) root@1923f14d3a08:/tmp/nanosw04# 
+$ docker run --platform=linux/amd64 -ti -v /tmp/P4runtime-nanoswitch:/tmp p4lang/p4runtime-sh --grpc-addr 192.168.1.2:50001 --device-id 1 --election-id 0,1 --config /tmp/nanosw04/p4info.txt,/tmp/nanosw04/nanosw03.json
+*** Welcome to the IPython shell for P4Runtime ***
+P4Runtime sh >>>
 ```
 
-今回スイッチプログラムに変更はないので、nanosw03 を再び実行し、PacketIn() 関数を呼び出して下さい。
+その後、以下のようにして /tmp/nanosw04 以下にある tutorial.py にあるコントローラプログラムを起動します。
 
 ```python
-(venv) root@f4f19294589c:/tmp/nanosw04# /p4runtime-sh/p4runtime-sh --grpc-addr 192.168.XX.XX:50001 --device-id 1 --election-id 0,1 --config p4info.txt,nanosw03.json
-*** Welcome to the IPython shell for P4Runtime ***
-P4Runtime sh >>> PacketIn()
+P4Runtime sh >>> import sys
 
-......
+P4Runtime sh >>> sys.path.append "/tmp/nanosw04"
+
+P4Runtime sh >>> import tutorial
+
+P4Runtime sh >>> tutorial.controller_daemon(packet_in, tutorial.my_packetin)
 ```
 
 #### Mininet 側操作
@@ -54,77 +57,103 @@ mininet>
 #### P4 RuntimeShell 側画面
 このとき、以下のような表示が出ていることが確認できます。最初の二つのパケットまでが Packet-In でコントローラに戻されており、二つ目の Packet-In 処理でフロー・エントリが設定されて以降はコントローラに Packet-In されることがなくなっています。
 ```bash
-P4Runtime sh >>> PacketIn()
+P4Runtime sh >>> tutorial.controller_daemon(packet_in, tutorial.my_packetin)
 
-........
-======              <<<< 一つ目のパケットの処理
 packet-in: dst=00:00:00:00:00:02 src=00:00:00:00:00:01 port=1
-macTable (mac - port)
- 00:00:00:00:00:01 - port(1)
-.
-======              <<<< 二つ目のパケットの処理
+send 
+ payload: "\\x00\\x00\\x00\\x00\\x00\\x02\\x00\\x00\\x00\\x00\\x00\\x01\\x08\\x00\\x45\\x00\\x00\\x54\\x45\\x25\\x40\\x00\\x40\\x01\\xe1\\x81\\x0a\\x00\\x00\\x01\\x0a\\x00\\x00\\x02\\x08\\x00\\x93\\xe7\\x00\\xa6\\x00\\x01\\x14\\x82\\xe1\\x69\\x00\\x00\\x00\\x00\\xa6\\xb2\\x08\\x00\\x00\\x00\\x00\\x00\\x10\\x11\\x12\\x13\\x14\\x15\\x16\\x17\\x18\\x19\\x1a\\x1b\\x1c\\x1d\\x1e\\x1f\\x20\\x21\\x22\\x23\\x24\\x25\\x26\\x27\\x28\\x29\\x2a\\x2b\\x2c\\x2d\\x2e\\x2f\\x30\\x31\\x32\\x33\\x34\\x35\\x36\\x37"
+metadata {
+  metadata_id: 1 ("egress_port")
+  value: "\\x00\\x01"
+}
+metadata {
+  metadata_id: 2 ("_pad")
+  value: "\\x00"
+}
+metadata {
+  metadata_id: 3 ("mcast_grp")
+  value: "\\x00\\x01"
+}
+
+
 packet-in: dst=00:00:00:00:00:01 src=00:00:00:00:00:02 port=2
-## INSERT ## dst=00:00:00:00:00:01 src=00:00:00:00:00:02 port=1
-## INSERT ## dst=00:00:00:00:00:02 src=00:00:00:00:00:01 port=2
-macTable (mac - port)
- 00:00:00:00:00:01 - port(1)
- 00:00:00:00:00:02 - port(2)
-. 　　　　　
-......^C  <<<< それ以降の ping のパケットは Packet-In されない（Control-C で中断）
+send 
+ payload: "\\x00\\x00\\x00\\x00\\x00\\x01\\x00\\x00\\x00\\x00\\x00\\x02\\x08\\x00\\x45\\x00\\x00\\x54\\x2e\\x29\\x00\\x00\\x40\\x01\\x38\\x7e\\x0a\\x00\\x00\\x02\\x0a\\x00\\x00\\x01\\x00\\x00\\x9b\\xe7\\x00\\xa6\\x00\\x01\\x14\\x82\\xe1\\x69\\x00\\x00\\x00\\x00\\xa6\\xb2\\x08\\x00\\x00\\x00\\x00\\x00\\x10\\x11\\x12\\x13\\x14\\x15\\x16\\x17\\x18\\x19\\x1a\\x1b\\x1c\\x1d\\x1e\\x1f\\x20\\x21\\x22\\x23\\x24\\x25\\x26\\x27\\x28\\x29\\x2a\\x2b\\x2c\\x2d\\x2e\\x2f\\x30\\x31\\x32\\x33\\x34\\x35\\x36\\x37"
+metadata {
+  metadata_id: 1 ("egress_port")
+  value: "\\x00\\x01"
+}
+metadata {
+  metadata_id: 2 ("_pad")
+  value: "\\x00"
+}
+metadata {
+  metadata_id: 3 ("mcast_grp")
+  value: "\\x00\\x00"
+}
+
+^C  <<<< それ以降の ping のパケットは Packet-In されない（Control-C で中断）
 Nothing (returned None)
 
 P4Runtime sh >>> 
+```
 
-<<<< 以下のようにして l2_match_table に登録されたフロー・エントリを確認することもできる。
+#### テーブルの中身
+
+以下のようにして l2_match_table に登録されたフロー・エントリを確認することができます。二つのエントリが登録されていることがわかるでしょう。
+
+```Python
 P4Runtime sh >>> table_entry["MyIngress.l2_match_table"].read(lambda te: print(te))
 table_id: 33609159 ("MyIngress.l2_match_table")
-match {
+match {                                 <<<< h2 -> h1 向けのエントリ
   field_id: 1 ("hdr.ethernet.dstAddr")
   exact {
-    value: "\\x00\\x00\\x00\\x00\\x00\\x01"
+    value: "\\x01"        <<<< 宛先が "00:00:00:00:00:01" かつ、
   }
 }
 match {
   field_id: 2 ("hdr.ethernet.srcAddr")
   exact {
-    value: "\\x00\\x00\\x00\\x00\\x00\\x02"
+    value: "\\x02"        <<<< 送り元が "00:00:00:00:00:02" の場合は、
   }
 }
 action {
   action {
-    action_id: 16838673 ("MyIngress.forward")
+    action_id: 16838673 ("MyIngress.forward")  <<<< forward 関数を呼び出す
     params {
       param_id: 1 ("port")
-      value: "\\x00\\x01"
+      value: "\\x01"        <<<< forward 関数の引数（出力ポート）に 1 を設定する
     }
   }
 }
 
 table_id: 33609159 ("MyIngress.l2_match_table")
-match {
+match {                                 <<<< h1 -> h2 向けのエントリ
   field_id: 1 ("hdr.ethernet.dstAddr")
   exact {
-    value: "\\x00\\x00\\x00\\x00\\x00\\x02"
+    value: "\\x02"        <<<< 宛先が "00:00:00:00:00:02" かつ、
   }
 }
 match {
   field_id: 2 ("hdr.ethernet.srcAddr")
   exact {
-    value: "\\x00\\x00\\x00\\x00\\x00\\x01"
+    value: "\\x01"        <<<< 送り元が "00:00:00:00:00:01" の場合は、
   }
 }
 action {
   action {
-    action_id: 16838673 ("MyIngress.forward")
+    action_id: 16838673 ("MyIngress.forward")  <<<< forward 関数を呼び出す
     params {
       param_id: 1 ("port")
-      value: "\\x00\\x02"
+      value: "\\x02"        <<<< forward 関数の引数（出力ポート）に 2 を設定する
     }
   }
 }
 
+P4Runtime sh >>>
+
 <<<< 以下のようにテーブルの中身を削除してから、もう一度挙動を見ると良い。
-P4Runtime sh >>> table_entry["MyIngress.l2_match_table"].read(lambda a: a.delete())                                                                                                          
+P4Runtime sh >>> table_entry["MyIngress.l2_match_table"].read(lambda a: a.delete())
 
 ```
 ### パケットの往復とフロー・テーブルの内容
@@ -184,83 +213,67 @@ macTable = { "00:00:00:00:00:01": 1,
 
 ### 関係するコード
 
-今回は Tutorial 3 のものと全く同じ nanosw03.p4 スイッチプログラムを使っています。Tutorial 3 との違いはコントローラ側、つまり shell.py と context.py だけです。
+今回は Tutorial 3 のものと全く同じ nanosw03.p4 スイッチプログラムを使っています。Tutorial 3 との違いはコントローラ側、つまり tutorial.py だけです。
 
-#### shell.py
+#### tutorial.py
 
 今回のバージョンで最も重要な役割を果たしている packetin_process() 関数を以下に示します。すぐ上で説明した、h1, h2 間のパケットの往復と、それに対応する内部の処理が実現されています。
 
 ```python
-def packetin_process(pin):
+def my_packetin(pin):
+    global macTable
     payload = pin.packet.payload
     dstMac = payload[0:6]
     srcMac = payload[6:12]
-    port = metadata_value(pin.packet.metadata, "packet_in", "ingress_port") # original ingres_port
-    print("\n======\npacket-in: dst={0} src={1} port={2}"
-            .format(mac2str(dstMac), mac2str(srcMac), int.from_bytes(port, byteorder='big')))
+    port = pin.packet.metadata[0].value
 
-    # if the source is new, record it with ingress port
-    if srcMac not in macTable:
-        macTable[ srcMac ] = port
-    # when destnation is broadcast, no need to record it
-    if dstMac == b'\xff\xff\xff\xff\xff\xff':
-        print("broadcast!")
-    else:
-        if dstMac in macTable: # if the destination is recorderd, set entry
-            insertFlowEntry(dstMac, srcMac, macTable[ dstMac ])
-            insertFlowEntry(srcMac, dstMac, macTable[ srcMac ])
-            # send to appropriate port
-            port = macTable[ dstMac ]
-            mcast_grp = b'\x00' # no Multicast
+    print("\npacket-in: dst={0} src={1} port={2}"
+          .format(mac2str(dstMac), mac2str(srcMac), int.from_bytes(port,'big')))
+
+    if dstMac == b'\xff\xff\xff\xff\xff\xff':  # broadcast
+        print('broadcast')
+    else:  # unicast
+        if srcMac not in macTable:
+            macTable[srcMac] = port
+        if dstMac in macTable:
+            insertFlowEntry(dstMac, srcMac, macTable[dstMac])
+            insertFlowEntry(srcMac, dstMac, macTable[srcMac])
+            out_port = str(int.from_bytes(macTable[dstMac],'big'))
+            mcast_grp = '0x0000'
         else:
-            # send to all (except original ingress port)
-            mcast_grp = FLOOD_GRP 
-        # Packet-out (as single-out or flood) 
-        PacketOut(port, mcast_grp, payload)
-
+            out_port = str(int.from_bytes(port,'big'))
+            mcast_grp = FLOOD_GRP
+        my_packetout(out_port, mcast_grp, payload)
 ```
 
 上の packetin_process() 関数から呼び出される insertFlowEntry() 関数も shell.py 中にあります。
 
 ```python
 def insertFlowEntry(dstMac, srcMac, port):
-    print("## INSERT ## dst={0} src={1} port={2}" 
-            .format(mac2str(dstMac), mac2str(srcMac), int.from_bytes(port, byteorder='big')))
-
     req = p4runtime_pb2.WriteRequest()
     update = req.updates.add()
     update.type = p4runtime_pb2.Update.INSERT
 
     table_entry = update.entity.table_entry
-    table_entry.table_id = context.get_obj_id(P4Type.table, "MyIngress.l2_match_table") # 33609159 
+    table_entry.table_id = context.get_obj_id(P4Type.table, "MyIngress.l2_match_table")
+
     m1 = p4runtime_pb2.FieldMatch()
-    m1.field_id = context.get_mf_id("MyIngress.l2_match_table", "hdr.ethernet.dstAddr") # 1 
+    m1.field_id = context.get_mf_id("MyIngress.l2_match_table", "hdr.ethernet.dstAddr")
     m1.exact.value = dstMac
     m2 = p4runtime_pb2.FieldMatch()
-    m2.field_id = context.get_mf_id("MyIngress.l2_match_table", "hdr.ethernet.srcAddr") # 2
+    m2.field_id = context.get_mf_id("MyIngress.l2_match_table", "hdr.ethernet.srcAddr")
     m2.exact.value = srcMac
-    table_entry.match.append(m1)
-    table_entry.match.append(m2)
+    table_entry.match.extend([m1, m2])
 
     action = table_entry.action.action
-    action.action_id = context.get_obj_id(P4Type.action, "MyIngress.forward") # 16838673 
-    param = p4runtime_pb2.Action.Param()    
-    param.param_id = context.get_param_id("MyIngress.forward", "port") # 1
-    param.value = port 
+    action.action_id = context.get_obj_id(P4Type.action, "MyIngress.forward")
+    param = p4runtime_pb2.Action.Param()
+    param.param_id = context.get_param_id("MyIngress.forward", "port")
+    param.value = port
     action.params.append(param)
 
     client.write(req)
 ```
-
-
-
-#### context.py
-
-ところで Tutorial 3 までは P4Runtime のメッセージに与える P4 Entitiy を、直接 id 番号で指定していました。この Tutorial では context.get_obj_id() 関数や context.get_mf_id() 関数などを使って名前からテーブル名やフィールド名の id 番号を得るようにしました。これらの関数は context.py で定義されています。
-
-またcontroller packet metadata を扱うための関数群が含まれていなかったので、それらについてもcontext.py に追加しています。packetin_process() 関数から呼び出される metadata_value() 関数などで使われています。
-
-これで一連のチュートリアルが完了しました。お疲れさまでした。
 
 
 

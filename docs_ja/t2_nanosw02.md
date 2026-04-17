@@ -7,25 +7,26 @@
 #### P4Runtime Shell 側操作
 
 一旦 P4Runtime Shell の実行を終わり、スイッチプログラムを nanosw02 に切り替えて再実行してください。
-```python
+```bash
 P4Runtime sh >>> exit
-(venv) root@f4f19294589c:/tmp/nanosw01# cd ../nanosw02
-(venv) root@f4f19294589c:/tmp/nanosw02# /p4runtime-sh/p4runtime-sh --grpc-addr 192.168.XX.XX:50001 --device-id 1 --election-id 0,1 --config p4info.txt,nanosw02.json
+$ docker run -ti -v /tmp/P4runtime-nanoswitch:/tmp p4lang/p4runtime-sh --grpc-addr 192.168.1.2:50001 --device-id 1 --election-id 0,1 --config /tmp/nanosw02/p4info.txt,/tmp/nanosw02/nanosw02.json
 *** Welcome to the IPython shell for P4Runtime ***
 P4Runtime sh >>>
 ```
 
 #### スイッチ側に Multicast Group の設定が残る（バグ？）
 
-Tutorial 1 で Multicast Group を設定しました。この設定は P4Runtime Shell を終了したあとも Mininet のスイッチに残っています。そのため、P4Runtime Shlell を再実行しても、Multicast Group の設定をもう一度行う必要はありません。しかし実際には read() は機能しません（先の me.read() は変数 me に記録されたレプリカを表示しているだけで、スイッチから情報を取得しているわけでは無いのです）し、再度同じ id で insert() してもエラーにはなりません。そのくせ、ping を飛ばすと「二度」パケットを複製します。
+Tutorial 1 で Multicast Group を設定しました。この設定は P4Runtime Shell を終了したあとも Mininet のスイッチに残っています。そのため、P4Runtime Shlell を再実行しても、Multicast Group の設定をもう一度行う必要はありません。しかし実際には read() は機能しませんし、再度同じ id で insert() してもエラーにはなりません。そのくせ、ping を飛ばすと「二度」パケットを複製します。
 
 この Mininet のスイッチ側の挙動が P4Runtime として正しいのか、あるいはバグなのか私には分かりません。とりあえず P4Runtime Shell を再起動して、以前に Multicast Group を登録したはずのスイッチに残されている Multicast Group id 1 の設定を消去する方法だけ以下に示しておきます。
 
 ```bash
-P4Runtime sh >>> MulticastGroupEntry(1).insert()  <<<< まず一度 insert しておく
+P4Runtime sh >>> MulticastGroupEntry(1).insert()  <<<< まず一度（意味なく）insert しておく
 
 P4Runtime sh >>> MulticastGroupEntry(1).delete()  <<<< 次に delete すると必ず消える
 ```
+
+このチュートリアルではこのバグのような動作を利用して、P4Runtime Shell を再起動しても Multicast 設定が残っているものとして進めます。もし Mininet 側が修正されてこの「設定が残る」ような振る舞いがなくなった場合は、毎回 Multicast Group の設定処理をする必要があります。
 
 #### Mininet 側操作
 
@@ -65,7 +66,7 @@ mininet>
 12:06:26.633996 IP 10.0.0.2 > 10.0.0.1: ICMP echo reply, id 108, seq 1, length 64
 ```
 
-次にこの実験でのパケットの動きについて説明します。
+つまり nanosw01 と nanosw02 の P4 プログラムの違いによって挙動が変わったのです。この実験でのパケットの動きについて説明します。
 
 ### パケットの動き
 
