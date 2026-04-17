@@ -84,7 +84,7 @@ nanosw04では無視していたブロードキャスト処理を追加します
 
 ## Appendix
 
-- RAW パケットの送信
+### RAW パケットの送信
 
 Mininet では ping などのツールがあり、ARP などを生じさせずに簡単にパケットを送信できますが、たとえば Wedge Switch など実機を使った実験などでは、Wedge 自身 (OpenNetworkLinux) あるいは Wedge のポートに接続した Windows/Mac などから任意のパケットを送信したくなるでしょう。そうした場合のツールを置いておきます。
 

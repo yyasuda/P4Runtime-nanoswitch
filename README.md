@@ -80,7 +80,7 @@ The switch created here prioritizes making P4Runtime easy to understand and expe
 
 ## Appendix
 
-- Sending RAW packets
+### Sending RAW packets
 
 Mininet provides tools such as ping, which allow you to easily send packets without generating ARP, etc. However, in experiments using real devices such as a Wedge Switch, you may want to send arbitrary packets from the Wedge itself (OpenNetworkLinux) or from a Windows/Mac connected to a Wedge port. Tools for such cases are provided below.
 
