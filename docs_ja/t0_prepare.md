@@ -23,12 +23,12 @@ root@f53fc79201b8:/tmp#
 
 #### Mininet 環境の立ち上げ
 
-ここでは [P4Runtime-enabled Mininet Docker Image](https://hub.docker.com/r/opennetworking/p4mn) をスイッチとして利用します。以下のようにして起動すると良いでしょう。
+ここでは [P4Runtime-enabled Mininet Docker Image](https://hub.docker.com/repository/docker/yutakayasuda/p4mn) をスイッチとして利用します。以下のようにして起動すると良いでしょう。
 
 P4Runtimeに対応した Mininet 環境を、Docker環境で起動します。起動時に --arp と --mac オプションを指定して、ARP 処理無しに ping テストなどができるようにしてあることに注意してください。
 
 ```bash
-$ docker run --privileged --rm -it -p 50001:50001 opennetworking/p4mn --arp --topo single,3 --mac
+$ docker run --privileged --rm -it -p 50001:50001 -e IPV6=false yutakayasuda/p4mn --arp --topo single,3 --mac
 (snip...)
 *** Starting CLI:
 mininet> 
@@ -46,52 +46,35 @@ h1 がスイッチにつながれているインタフェイス h1-eth0 の MAC 
 
 ### P4Runtime Shell と Mininet の接続
 
-#### P4Runtime Shell dev 版の作成
-
-このチュートリアルでの実験には、[p4runtime shell](https://github.com/p4lang/p4runtime-shell) Docker Image を、Dockerfile.dev を使ってビルドしたものを使用します。
+今後、ホストの /tmp/P4runtime-nanoswitch ディレクトリと docker の /tmp を同期させて実験します。そのためのディレクトリを作り、チュートリアルの各ステップごとのファイルを置いておきましょう。
 
 ```bash
-$ git clone https://github.com/p4lang/p4runtime-shell.git
-Cloning into 'p4runtime-shell'...
-remote: Enumerating objects: 50, done.
-(snip...)
-Resolving deltas: 100% (101/101), done.
-$ cd p4runtime-shell/
-$ docker build -t myproj/p4rt-sh-dev -f Dockerfile.dev .
-Sending build context to Docker daemon  372.2kB
-Step 1/7 : FROM p4lang/p4runtime-sh:latest
-(snip...)
-Successfully built 5ddb6ed47ba8
-Successfully tagged myproj/p4rt-sh-dev:latest
-$ docker images
-REPOSITORY            TAG                 IMAGE ID            CREATED             SIZE
-myproj/p4rt-sh-dev    latest              5ddb6ed47ba8        23 seconds ago      285MB
+$ mkdir /tmp/P4runtime-nanoswitch
+$ cp -rp nanosw0* /tmp/P4runtime-nanoswitch
+$ ls /tmp/P4runtime-nanoswitch
+nanosw01	nanosw02	nanosw03	nanosw04	nanosw05	nanosw06
+$ 
 ```
-ビルド出来たら、以下のようにして起動してください。
-```bash
-$ docker run -it -v /tmp/P4runtime-nanoswitch/:/tmp/ myproj/p4rt-sh-dev /bin/bash
-root@d633c64bbb3c:/p4runtime-sh# source $VENV/bin/activate
-(venv) root@d633c64bbb3c:/p4runtime-sh# 
-```
-ここではホストの /tmp/P4runtime-nanoswitch ディレクトリと docker の /tmp を同期させていることに注意して下さい。それから、上の ```source $VENV/bin/activate``` 処理はすぐこの後の操作で重要なので忘れないように。
 
-#### Mininet への接続
-
-以下のようにして Mininet への接続を確認してください。IPアドレスは自身の環境に合わせて下さい。tables など、簡単なコマンドが動作することを確認しておくと良いでしょう。
+この状態で以下のようにして P4 Runtime Shell を起動します。これは nanosw01 チュートリアルを試す場合です。IPアドレスは自身の環境に合わせて下さい。
 
 ```bash
-(venv) root@d633c64bbb3c:/p4runtime-sh# cd /tmp/nanosw01
-(venv) root@d633c64bbb3c:/tmp/nanosw01# /p4runtime-sh/p4runtime-sh --grpc-addr 192.168.XX.XX:50001 --device-id 1 --election-id 0,1 --config p4info.txt,nanosw01.json
+$ docker run --platform=linux/amd64 -ti -v /tmp/P4runtime-nanoswitch:/tmp p4lang/p4runtime-sh --grpc-addr 192.168.1.2:50001 --device-id 1 --election-id 0,1 --config /tmp/nanosw01/p4info.txt,/tmp/nanosw01/nanosw01.json
 *** Welcome to the IPython shell for P4Runtime ***
+P4Runtime sh >>>
+```
+以下のように tables など簡単なコマンドが動作することで、Mininet と正しく接続できていることを確認してください。
+
+```bash
 P4Runtime sh >>> tables
 MyIngress.l2_match_table
 
-P4Runtime sh >>> 
+P4Runtime sh >>>
 ```
 
 これで準備は完了です。
 
-
+**ARM Mac 版での注意 : ** Arm 版 Mac で P4 Runtime Shell を動作させるためには、現時点では Rosetta を有効にする必要があります。Dockerhub の設定>>General>>Virtual Machine Options にある「Use Rosetta for x86_64/amd64 emulation on Apple Silicon」にチェックを入れてください。その上で docker コマンドに対して ```$ docker run --platform=linux/amd64 ...``` のように platform オプションを加えてやると良いでしょう。
 
 ## Next Step
 
