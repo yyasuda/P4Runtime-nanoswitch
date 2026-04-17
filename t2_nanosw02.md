@@ -39,7 +39,6 @@ PING 10.0.0.2 (10.0.0.2) 56(84) bytes of data.
 1 packets transmitted, 1 received, 0% packet loss, time 0ms
 rtt min/avg/max/mdev = 1.511/1.511/1.511/0.000 ms
 mininet> 
-
 ```
 
 The monitoring results of each port are shown below. You can see that this also suppresses unnecessary packet repeating.
@@ -84,7 +83,6 @@ control MyEgress(inout headers hdr, inout metadata meta,
         }
     }
 }
-
 ```
 
 By this operation, unnecessary packet repeating was eliminated, and correct "Flooding" can be performed.

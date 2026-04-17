@@ -1,115 +1,95 @@
-# P4Runtime-nanoswitch
+# P4Runtime-NanoSwitch
+
 A Simple L2 lerning switch development tutorial on P4Runtime
 
 [see Japanese version](docs_ja/README.md)
 
 ### Introduction
 
-This tutorial uses P4Runtime's Packet-In / Out function to build a simple switch which is based on the P4Runtime Shell.  It also provides an easy to use environment for you to continue to expand the capabilities of your own switch.
+This tutorial builds a simple switch using the Packet-In/Out functionality of P4Runtime. It also prototypes a simple controller based on the P4Runtime Shell and provides an environment that makes it easy for you to continuously extend its functionality.
 
 ## This tutorial does…
 
-In this tutorial, you will try four things as follows:
+In this tutorial, you will try the following four things. In the end, a very simple MAC Learning Switch will be completed.
 
-1. Multicast Group settings and the Flooding process using them
-2. Processing request to the controller using Packet-In
-3. Using Packet-Out to Add Entries to the Switch Table
-4. Adding functionalities to the P4Runtime Shell to execute such experiments
+1. Configuration of Multicast Groups and flooding processing using them
+2. Requesting processing to the controller using Packet-In
+3. Adding entries to the switch table using Packet-Out
+4. Adding functionality to the P4Runtime Shell to conduct these experiments
 
-The final result is a very simple MAC learning switch.
+These experiments are performed in the following environment:
 
-These experiments are performed in the following environments:
+- Use P4Runtime Shell as the controller
+- Use Mininet with P4Runtime support as the switch
+- Use the open-source p4c for P4 compilation
 
-- Use P4 Runtime Shell as controller
-- Use Mininet corresponding to P4 Runtime as switch
-- Use open source p4c for P4 compilation
-
-If you skip the tutorial, try [shortcut](./ta_cheatsheet.md).
-
-
+If you want to skip the tutorial, there is a [shortcut](./ta_cheatsheet.md).
 
 ## Step by Step
 
-All set. Here are the steps. I recommend that you try them in order.
+The steps are shown one by one below. It is recommended to try them in order.
 
-### Tutorial 0: [Preparing the Environment](https://github.com/yyasuda/P4Runtime-firstbite/blob/master/t0_prepare.md)
+### Tutorial 0: [Preparing the Environment](./t0_prepare.md)
 
-Start Mininet and start the P4 Runtime Shell, which is the controller replacement. Then connect them.
+Start Mininet and connect the P4Runtime Shell, which acts as a controller, to it.
 
 ### Tutorial 1: [NanoSwitch01](./t1_nanosw01.md)
 
-Repeat all incoming packets to all ports.
-- Set a Multicast Group and output to
+Repeat all received packets to all ports
+- Configure a Multicast Group and output to it
 
 ### Tutorial 2: [NanoSwitch02](./t2_nanosw02.md)
 
-Prevent repeat back to the input port.
-- Drop Multicast packets if they have the same port number as Ingress port
+Prevent the ingress port from being included in the repeat target
+- Drop multicast packets if the port number is the same as the ingress port
 
 ### Tutorial 3: [NanoSwitch03](./t3_nanosw03.md)
 
-Create a flow table on the switch side to accommodate unknown hosts.
-- Unknown is processed as Packet-In
-- Packets received as Packet-In will send back as Packet-Out to repeat to all ports
+Create a flow table on the switch side to handle unknown hosts
+- Unknown packets are sent as Packet-In
+- Packets received via Packet-In are sent back as Packet-Out to repeat to all ports
 
 ### Tutorial 4: [NanoSwitch04](./t4_nanosw04.md)
 
-Create a host table on the controller side to correspond to known hosts.
-
-- Add round-trip entries to the flow table for communication with known host pairs
-- From now on, the switch will forward the round-trip packet without the controller
+Create a host table on the controller side to handle known hosts
+- For communication between known host pairs, add entries for both directions to the flow table
+- After this, packet forwarding in both directions is handled by the switch alone without involving the controller
 
 ### Tutorial 5: [NanoSwitch05](./t5_nanosw05.md)
 
-Add the broadcast process, which has been ignored in nanosw04
+Add broadcast processing, which was ignored in nanosw04
 
-- When the broadcast comes out, add the corresponding entry to the flow table
+- When a broadcast occurs, add the corresponding entry to the flow table
 - By supporting ARP, it will behave more like a normal switch
 
 ### Tutorial 6: [NanoSwitch06](./t6_nanosw06.md)
 
-Corresponds to the error when the entry could not be added to the flow table in time
+Handle errors that occur when adding entries to the flow table cannot be completed in time
 
-- Ignore the error if double registration occurs
-
-
+- If duplicate registration occurs, ignore the error
 
 ## Next Step
 
-The Switch I designed has priority on making the P4 Runtime easy to understand and try out. So it's pretty imperfect in terms of functionality, and there are several issues that come to mind. Why don't you add them yourself?
+The switch created here prioritizes making P4Runtime easy to understand and experiment with. Therefore, it is quite incomplete in terms of functionality, and the following issues can be easily identified. Why not try adding these yourself?
 
--  In actual switch operation, it is common to replace host X from port 1 to port 2 on the same switch. However, this switch does not handle this and packets cannot go back and forth.
+- In actual switch operation, it is common to replace host X from port 1 to port 2 on the same switch. However, this switch does not take this into account, and after replacement, packets can no longer be exchanged.
 
-- There is a limit to the number of entries that can be registered, so you should remove any flow entries for which there has been no packet flow for some time.
+- Since there is a limit to the number of entries that can be registered, flow entries that have not seen traffic for a while should be removed.
 
-- In the first place, a normal L2 Learning Switch only remembers the port on which the destination host resides, and does not need to remember an entry for each flow. However, in order to do this in P4, you need two tables: one for source MAC and one for destination MAC + port. How about making a switch to match two tables in this way?
-
-
+- In a typical L2 Learning Switch, it is sufficient to remember only which port the destination host resides on, and there is no need to maintain entries per flow. However, to achieve this in P4, two tables are required: one matching on source MAC and another matching on destination MAC + port. Why not try creating a switch that matches these two tables in sequence?
 
 ## Appendix
 
-### Modified P4Runtime Shell
+- Sending RAW packets
 
-This tutorial was arranged by adding features to the P4 Runtime Shell. I have released the [Modified P4Runtime Shell] (https://github.com/yyasuda/p4runtime-shell) which I used to design this switch. If you compare Dockerfile.dev to the original version, you'll see where it's been modified. [Docker Image](https://hub.docker.com/r/yutakayasuda/p4runtime-shell-dev) which was created by the method shown in Tutorial 0: [Preparing the Environment](t0_prepare.md) is also available.
-
-It includes all the features that I used in this tutorial, as well as some features that I didn't cover here. Hit the link below to read more.
-
-- [Miscellaneous features added to the modified P4 Runtime Shell](ta_p4rt-sh-misc.md)
-
-### Send RAW Packets
-
-Mininet provides tools such as ping, which makes it easy to send packets without ARP, etc. However, in experiments with real devices such as the Wedge Switch, you may want to send arbitrary packets from Wedge itself (OpenNetworkLinux) or a Windows/Mac connected to the Wedge port. Here are the tools for that.
+Mininet provides tools such as ping, which allow you to easily send packets without generating ARP, etc. However, in experiments using real devices such as a Wedge Switch, you may want to send arbitrary packets from the Wedge itself (OpenNetworkLinux) or from a Windows/Mac connected to a Wedge port. Tools for such cases are provided below.
 
 - [How to Send RAW Packets](ta_rawsend.md)
 
-### CPU port changes
+### CPU port modification
 
-CPU port information is at the beginning of nanoswXX.p4. If necessary, update it and recompile.
+CPU port information is located at the beginning of nanoswXX.p4. Modify the following definition as necessary and recompile.
 
 ```C++
 #define CPU_PORT 255
 ```
-
-If you don't know the CPU port number of the switch you are testing, [P4Runtime-CPUport-finder](https://github.com/yyasuda/P4Runtime-CPUport-finder) may help.
-
-

@@ -1,45 +1,48 @@
 ## Tutorial 4: NanoSwitch04
 
-Create a host table on the controller side to correspond to known hosts. This means adding round-trip entries to the flow table for communications between known host pairs. After that, switch forwards the round-trip packet without going through the controller.
+Create a host table on the controller side to handle known hosts. In other words, for communication between known host pairs, entries for both directions are added to the flow table. After that, packet forwarding in both directions is handled by the switch alone without involving the controller.
 
-###  For those who start from here to shortcut
+###  For those who want to skip ahead and start here
 
-This experiment requires the following process:
+To run this test, the following steps are required.
 
-1. Start the P4 Runtime Shell and Connect to Mininet - see; Tutorial 0: [Preparation the Environment](./t0_prepare.md)
-2. Multicast Group Settings - see; Tutorial 1: [NanoSwitch01](./t1_nanosw01.md)
-Without it, Flooding will not happen. And since there are no (visible) errors, you won't know why it doesn't work.
+1. Start P4Runtime Shell and connect to Mininet - see; Tutorial 0: [Preparing the Environment](./t0_prepare.md)
+2. Configure Multicast Group - see; Tutorial 1: [NanoSwitch01](./t1_nanosw01.md)  
+   Without this, flooding will not occur. Since no visible error occurs, it may be difficult to understand why it does not work.
 
 ### Experiment
 
-#### P4Runtime Shell operation
+#### Operations on the P4Runtime Shell side
 
-Terminate the execution of the P4Runtime Shell and replace shell.py with the expanded version of it in nanosw04 directory. 
+This time there are no changes to the switch program, and the same nanosw03 switch program is used, but tutorial.py from the nanosw04 directory is used.
+
+First, exit the P4Runtime Shell, and restart it using the nanosw03 switch program under nanosw04.
 
 ```python
 P4Runtime sh >>> exit
-(venv) root@1923f14d3a08:/tmp/nanosw03# cd ../nanosw04
-(venv) root@1923f14d3a08:/tmp/nanosw04# cp shell.py /p4runtime-sh/p4runtime_sh/shell.py 
-(venv) root@1923f14d3a08:/tmp/nanosw04# cp context.py /p4runtime-sh/p4runtime_sh/context.py 
-(venv) root@1923f14d3a08:/tmp/nanosw04# 
+$ docker run -ti -v /tmp/P4runtime-nanoswitch:/tmp p4lang/p4runtime-sh --grpc-addr 192.168.1.2:50001 --device-id 1 --election-id 0,1 --config /tmp/nanosw04/p4info.txt,/tmp/nanosw04/nanosw03.json
+*** Welcome to the IPython shell for P4Runtime ***
+P4Runtime sh >>>
 ```
 
-Since there is no change in the switch program this time, execute nanosw03 again and call the PacketIn() function.
+After that, start the controller program tutorial.py located under /tmp/nanosw04 as follows.
 
 ```python
-(venv) root@f4f19294589c:/tmp/nanosw04# /p4runtime-sh/p4runtime-sh --grpc-addr 192.168.XX.XX:50001 --device-id 1 --election-id 0,1 --config p4info.txt,nanosw03.json
-*** Welcome to the IPython shell for P4Runtime ***
-P4Runtime sh >>> PacketIn()
+P4Runtime sh >>> import sys
 
-......
+P4Runtime sh >>> sys.path.append "/tmp/nanosw04"
+
+P4Runtime sh >>> import tutorial
+
+P4Runtime sh >>> tutorial.controller_daemon(packet_in, tutorial.my_packetin)
 ```
 
-#### Mininet operation
+#### Operations on the Mininet side
 
-If you send ping requests again here, you can confirm that the ping responses are returned correctly.
+When you send a ping request again here, you can confirm that a ping reply is returned as before.
 
 ```bash
-mininet> h1 ping h2        <<<<<< ping from h1 to h2 repeatedly
+mininet> h1 ping h2
 PING 10.0.0.2 (10.0.0.2) 56(84) bytes of data.
 64 bytes from 10.0.0.2: icmp_seq=1 ttl=64 time=8.38 ms
 64 bytes from 10.0.0.2: icmp_seq=2 ttl=64 time=0.701 ms
@@ -51,127 +54,164 @@ PING 10.0.0.2 (10.0.0.2) 56(84) bytes of data.
 rtt min/avg/max/mdev = 0.535/0.772/1.114/0.221 ms
 mininet> 
 ```
-#### P4 RuntimeShell operation
-At this time, you can see the following messages. Up to the first two packets are returned to the controller by Packet-In, and since flow entries are set by the second Packet-In processing, it is no longer packet-In to the controller.
-```bash
-P4Runtime sh >>> PacketIn()
 
-........
-======              <<<< 1st packet processing
+#### P4 RuntimeShell screen
+
+At this time, you can confirm that output like the following is displayed. The first two packets are returned to the controller as Packet-In, and after flow entries are set during the processing of the second Packet-In, no further Packet-In processing occurs.
+
+```bash
+P4Runtime sh >>> tutorial.controller_daemon(packet_in, tutorial.my_packetin)
+
 packet-in: dst=00:00:00:00:00:02 src=00:00:00:00:00:01 port=1
-macTable (mac - port)
- 00:00:00:00:00:01 - port(1)
-.
-======              <<<< 2nd packet processing
+send 
+ payload: "\x00\x00\x00\x00\x00\x02\x00\x00\x00\x00\x00\x01\x08\x00\x45\x00\x00\x54\x45\x25\x40\x00\x40\x01\xe1\x81\x0a\x00\x00\x01\x0a\x00\x00\x02\x08\x00\x93\xe7\x00\xa6\x00\x01\x14\x82\xe1\x69\x00\x00\x00\x00\xa6\xb2\x08\x00\x00\x00\x00\x00\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f\x20\x21\x22\x23\x24\x25\x26\x27\x28\x29\x2a\x2b\x2c\x2d\x2e\x2f\x30\x31\x32\x33\x34\x35\x36\x37"
+metadata {
+  metadata_id: 1 ("egress_port")
+  value: "\x00\x01"
+}
+metadata {
+  metadata_id: 2 ("_pad")
+  value: "\x00"
+}
+metadata {
+  metadata_id: 3 ("mcast_grp")
+  value: "\x00\x01"
+}
+
+
 packet-in: dst=00:00:00:00:00:01 src=00:00:00:00:00:02 port=2
-## INSERT ## dst=00:00:00:00:00:01 src=00:00:00:00:00:02 port=1
-## INSERT ## dst=00:00:00:00:00:02 src=00:00:00:00:00:01 port=2
-macTable (mac - port)
- 00:00:00:00:00:01 - port(1)
- 00:00:00:00:00:02 - port(2)
-. 　　　　　
-......^C  <<<< Subsequent ping packets are not Packet-In (interrupted by Control-C)
+send 
+ payload: "\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x02\x08\x00\x45\x00\x00\x54\x2e\x29\x00\x00\x40\x01\x38\x7e\x0a\x00\x00\x02\x0a\x00\x00\x01\x00\x00\x9b\xe7\x00\xa6\x00\x01\x14\x82\xe1\x69\x00\x00\x00\x00\xa6\xb2\x08\x00\x00\x00\x00\x00\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f\x20\x21\x22\x23\x24\x25\x26\x27\x28\x29\x2a\x2b\x2c\x2d\x2e\x2f\x30\x31\x32\x33\x34\x35\x36\x37"
+metadata {
+  metadata_id: 1 ("egress_port")
+  value: "\x00\x01"
+}
+metadata {
+  metadata_id: 2 ("_pad")
+  value: "\x00"
+}
+metadata {
+  metadata_id: 3 ("mcast_grp")
+  value: "\x00\x00"
+}
+
+^C  <<<< subsequent ping packets are not processed as Packet-In (interrupted with Control-C)
 Nothing (returned None)
 
 P4Runtime sh >>> 
+```
 
-<<<< You can check the flow entries registered in l2_match_table as follows
+#### Table contents
+
+You can check the flow entries registered in l2_match_table as follows. You can see that two entries are registered.
+
+```Python
 P4Runtime sh >>> table_entry["MyIngress.l2_match_table"].read(lambda te: print(te))
 table_id: 33609159 ("MyIngress.l2_match_table")
-match {
+match {                                 <<<< entry for h2 -> h1
   field_id: 1 ("hdr.ethernet.dstAddr")
   exact {
-    value: "\\x00\\x00\\x00\\x00\\x00\\x01"
+    value: "\x01"        <<<< destination is "00:00:00:00:00:01" and
   }
 }
 match {
   field_id: 2 ("hdr.ethernet.srcAddr")
   exact {
-    value: "\\x00\\x00\\x00\\x00\\x00\\x02"
+    value: "\x02"        <<<< source is "00:00:00:00:00:02"
   }
 }
 action {
   action {
-    action_id: 16838673 ("MyIngress.forward")
+    action_id: 16838673 ("MyIngress.forward")  <<<< call forward function
     params {
       param_id: 1 ("port")
-      value: "\\x00\\x01"
+      value: "\x01"        <<<< set 1 as the output port argument of forward
     }
   }
 }
 
 table_id: 33609159 ("MyIngress.l2_match_table")
-match {
+match {                                 <<<< entry for h1 -> h2
   field_id: 1 ("hdr.ethernet.dstAddr")
   exact {
-    value: "\\x00\\x00\\x00\\x00\\x00\\x02"
+    value: "\x02"        <<<< destination is "00:00:00:00:00:02" and
   }
 }
 match {
   field_id: 2 ("hdr.ethernet.srcAddr")
   exact {
-    value: "\\x00\\x00\\x00\\x00\\x00\\x01"
+    value: "\x01"        <<<< source is "00:00:00:00:00:01"
   }
 }
 action {
   action {
-    action_id: 16838673 ("MyIngress.forward")
+    action_id: 16838673 ("MyIngress.forward")  <<<< call forward function
     params {
       param_id: 1 ("port")
-      value: "\\x00\\x02"
+      value: "\x02"        <<<< set 2 as the output port argument of forward
     }
   }
 }
 
-<<<< It is good idea to delete entires as follows, to see this behavior again.
-P4Runtime sh >>> table_entry["MyIngress.l2_match_table"].read(lambda a: a.delete())                                                                                                          
+P4Runtime sh >>>
+
+<<<< It is a good idea to delete the table contents as follows and observe the behavior again.
+P4Runtime sh >>> table_entry["MyIngress.l2_match_table"].read(lambda a: a.delete())
+
 ```
-### Packet round trip and flow table contents
 
-The following is a more detailed explanation of the round trip of packets and internal processing.
+### Packet exchanges and flow table contents
 
-To realize this processing, the controller maintains a table (Variable Name macTable) of host MAC addresses and port numbers to which they are connected. This is called the host table. Let's call the table on the switch side, l2_match_table, the flow table.
+Below, we explain in more detail the packet exchanges and internal processing.
 
-First, I'll illustrate the step-by-step state of the two tables.
+To realize this processing, the controller maintains a table of host MAC addresses and the port numbers to which they are connected (variable name macTable). We call this the host table. The table on the switch side, l2_match_table, is called the flow table.
 
+First, the states of the two tables at each step are shown below.
 <img src="experiment.png" alt="attach:(Packet and flow entry sequences)" title="Packet and flow entry sequences">
-The details are described below.
+
+The details are explained below.
 
 #### 1. Initial State
 
-Initially, both the host table and flow table are empty.
+In the initial state, both the host table and the flow table are empty.
+
 ```python
 macTable = {}
 ```
+
 | dstAddr | srcAddr | port |
 | ------- | ------- | ---- |
 |         |         |      |
 
 #### 2. h1 -> h2 : ICMP Echo Request
 
-The first packet does not match the flow table match patterns and process as Packet-In. Controller that has received this, do the following processing.
-1. The address of the source MAC of h1 is not in the host table. It is "Unknown" and recorded in the host table along with the ingress port, port1.
-2. There is nothing we can do because the address of the destination h2 is also "Unknown".
-3. The packet will be processed as Packet-Out with a Flooding designation.
+The first packet does not match any pattern in the flow table, so it is sent as Packet-In. The controller that receives this performs the following processing.
+
+1. The source address h1 is "Unknown", meaning it is not in the host table, so it is recorded in the host table along with its ingress port (port 1).
+2. The destination address h2 is also "Unknown", so nothing can be done.
+3. This packet is sent as Packet-Out with flooding specified.
+
 ```python
 macTable = { "00:00:00:00:00:01": 1 }
 ```
+
 | dstAddr | srcAddr | port |
 | ------- | ------- | ---- |
 |         |         |      |
 
 #### 3. h2 -> h1 : ICMP Echo reply
 
-Echo Request is to reach the h2 by Flooding, h2 will send a reply for h1. However, the packet does not match the flow table match patterns and process as Packet-In. Controller that has received this, do the following processing.
+Due to flooding, the Echo Request reaches h2, and h2 sends a reply to h1. However, this packet also does not match any pattern in the flow table, so it is sent as Packet-In. The controller that receives this performs the following processing.
 
-1. The address of the source MAC of h2 is not in the host table. It is "Unknown" and recorded in the host table along with the ingress port, port2.
-3. It is clear that the destination h1 is already existing in the host table and can be sent to port 1. Now that you have the destination and source information, add the round-trip entries to the flow table.
-4. The packet will be processed as Packet-Out to port 1.
+1. The source h2 is "Unknown", so it is recorded in the host table along with its ingress port (port 2).
+3. The destination h1 is "Already known", meaning it already exists in the host table, and it is clear that it should be sent to port 1. Since both destination and source information are now available, entries for both directions are added to the flow table.
+4. This packet is sent as Packet-Out to port 1.
 
 ```python
 macTable = { "00:00:00:00:00:01": 1,
              "00:00:00:00:00:02": 2 }
 ```
+
 | dstAddr | srcAddr | port |
 | ------- | ------- | ---- |
 | 00:00:00:00:00:01 | 00:00:00:00:00:02 | 1 |
@@ -179,75 +219,69 @@ macTable = { "00:00:00:00:00:01": 1,
 
 #### 4. after that....
 
-All subsequent communication between h1 and h2 is forwarded only by the switch, not through the controller. No Packet-In or flooding will occur.
+After this, all communication between h1 and h2 is forwarded by the switch alone without involving the controller. No Packet-In or flooding occurs.
 
 
 
-### Related codes
+### Related code
 
-This time, we use the same nanosw03.p4 switch program as in Tutorial 3. The only difference from Tutorial 3 is the controller side, that is, shell.py and context.py.
+This time, the same nanosw03.p4 switch program as in Tutorial 3 is used. The difference from Tutorial 3 is only on the controller side, namely tutorial.py.
 
-#### shell.py
+#### tutorial.py
 
-Here is the packetin_process () function that plays the most important role in this version. The packet round trip between h1 and h2 and the corresponding internal processing described above have been implemented.
+The packetin_process() function, which plays the most important role in this version, is shown below. It implements the packet exchanges between h1 and h2 and the corresponding internal processing described above.
 
 ```python
-def packetin_process(pin):
+def my_packetin(pin):
+    global macTable
     payload = pin.packet.payload
     dstMac = payload[0:6]
     srcMac = payload[6:12]
-    port = metadata_value(pin.packet.metadata, "packet_in", "ingress_port") # original ingres_port
-    print("\n======\npacket-in: dst={0} src={1} port={2}"
-            .format(mac2str(dstMac), mac2str(srcMac), int.from_bytes(port, byteorder='big')))
+    port = pin.packet.metadata[0].value
 
-    # if the source is new, record it with ingress port
-    if srcMac not in macTable:
-        macTable[ srcMac ] = port
-    # when destnation is broadcast, no need to record it
-    if dstMac == b'\xff\xff\xff\xff\xff\xff':
-        print("broadcast!")
-    else:
-        if dstMac in macTable: # if the destination is recorderd, set entry
-            insertFlowEntry(dstMac, srcMac, macTable[ dstMac ])
-            insertFlowEntry(srcMac, dstMac, macTable[ srcMac ])
-            # send to appropriate port
-            port = macTable[ dstMac ]
-            mcast_grp = b'\x00' # no Multicast
+    print("\npacket-in: dst={0} src={1} port={2}"
+          .format(mac2str(dstMac), mac2str(srcMac), int.from_bytes(port,'big')))
+
+    if dstMac == b'\xff\xff\xff\xff\xff\xff':  # broadcast
+        print('broadcast')
+    else:  # unicast
+        if srcMac not in macTable:
+            macTable[srcMac] = port
+        if dstMac in macTable:
+            insertFlowEntry(dstMac, srcMac, macTable[dstMac])
+            insertFlowEntry(srcMac, dstMac, macTable[srcMac])
+            out_port = str(int.from_bytes(macTable[dstMac],'big'))
+            mcast_grp = '0x0000'
         else:
-            # send to all (except original ingress port)
-            mcast_grp = FLOOD_GRP 
-        # Packet-out (as single-out or flood) 
-        PacketOut(port, mcast_grp, payload)
-
+            out_port = str(int.from_bytes(port,'big'))
+            mcast_grp = FLOOD_GRP
+        my_packetout(out_port, mcast_grp, payload)
 ```
 
-The insertFlowEntry() function called from the packetin_process() function above is also in shell.py.
+The insertFlowEntry() function called from the packetin_process() function above is also defined in shell.py.
 
 ```python
 def insertFlowEntry(dstMac, srcMac, port):
-    print("## INSERT ## dst={0} src={1} port={2}" 
-            .format(mac2str(dstMac), mac2str(srcMac), int.from_bytes(port, byteorder='big')))
-
     req = p4runtime_pb2.WriteRequest()
     update = req.updates.add()
     update.type = p4runtime_pb2.Update.INSERT
 
     table_entry = update.entity.table_entry
-    table_entry.table_id = context.get_obj_id(P4Type.table, "MyIngress.l2_match_table") # 33609159 
+    table_entry.table_id = context.get_obj_id(P4Type.table, "MyIngress.l2_match_table")
+
     m1 = p4runtime_pb2.FieldMatch()
-    m1.field_id = context.get_mf_id("MyIngress.l2_match_table", "hdr.ethernet.dstAddr") # 1 
+    m1.field_id = context.get_mf_id("MyIngress.l2_match_table", "hdr.ethernet.dstAddr")
     m1.exact.value = dstMac
     m2 = p4runtime_pb2.FieldMatch()
-    m2.field_id = context.get_mf_id("MyIngress.l2_match_table", "hdr.ethernet.srcAddr") # 2
+    m2.field_id = context.get_mf_id("MyIngress.l2_match_table", "hdr.ethernet.srcAddr")
     m2.exact.value = srcMac
-    table_entry.match.append(m1)
-    table_entry.match.append(m2)
+    table_entry.match.extend([m1, m2])
 
     action = table_entry.action.action
-    action.action_id = context.get_obj_id(P4Type.action, "MyIngress.forward") # 16838673 
-    param = p4runtime_pb2.Action.Param()    
-    param.param_id = context.get_param_id("MyIngress.forward", "port") # 1
-    param.value = port 
+    action.action_id = context.get_obj_id(P4Type.action, "MyIngress.forward")
+    param = p4runtime_pb2.Action.Param()
+    param.param_id = context.get_param_id("MyIngress.forward", "port")
+    param.value = port
     action.params.append(param)
 
     client.write(req)
@@ -255,17 +289,6 @@ def insertFlowEntry(dstMac, srcMac, port):
 
 
 
-#### context.py
-
-By the way, until Tutorial 3, P4 Entity to be given to the message of P4Runtime was directly specified by id number. This tutorial uses the context.get_obj_id() and context.get_mf_id() functions to get the id number of a table or field by the name. These functions are defined in context.py.
-
-Also, there were no functions implemented for handling controller packet metadata, so I added them to context.py. It is used by the metadata_value() function, which is called by the packetin_process() function.
-
-
-
 ## Next Step
 
 #### Tutorial 5: [NanoSwitch05](t5_nanosw05.md)
-
-
-

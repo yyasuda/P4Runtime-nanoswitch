@@ -1,22 +1,22 @@
 ## Tutorial 1: NanoSwitch01
 
-First, create the simplest switch that repeats all incoming packets to all ports. P4 provides the Multicast Group function for such purposes.
+First, as the simplest switch, we will create one that repeats all received packets to all ports. In P4, the Multicast Group function is provided for such purposes.
 
 ### Experiment
 
-#### P4Runtime Shell operation
+#### Operations on the P4Runtime Shell side
 
-Here you can configure the Multicast Group. By using MulticastGroupEntry of P4Runtime, one packet can be duplicated and output to multiple ports.
+Here we configure a Multicast Group. By using P4Runtime's MulticastGroupEntry, a single packet can be replicated and output to multiple ports. Note that the following operations assume that you have already connected to Mininet using the nanosw01 program in [Tutorial 0:](t0_nanosw00.md).
 
-For example, switch s1 has three ports, port 1, 2, and 3. By registering them all in one Multicast Group and setting the packet output destination to this Multicast Group. It's the so-called Flooding.
+For example, switch s1 has three ports: port 1, 2, and 3. By registering all of these into a single Multicast Group and setting the packet output destination to this Multicast Group, so-called flooding is performed.
 
-The following operation creates a request to bind ports 1, 2, and 3 to id 1 of the Multicast Group. When the created request is sent to the switch by insert() operation, a Multicast Group is set in the switch.
+The following operation creates a request that associates port 1, 2, and 3 with Multicast Group id 1. When the created request is sent to the switch using the insert() operation, the Multicast Group is configured in the switch.
 
 ```python
 P4Runtime sh >>> me = MulticastGroupEntry(1)
 
 P4Runtime sh >>> me.add(1).add(2).add(3)
-Out[6]: 
+Out[3]: 
 multicast_group_entry {
   multicast_group_id: 1
   replicas {
@@ -35,36 +35,25 @@ P4Runtime sh >>> me.insert()
 P4Runtime sh >>> 
 ```
 
-Note that the first two lines of the above operation can be written together on one line as follows. Also, you can confirm the registered contents by ```me.read ()```.
+The first two lines of the above operation can also be written in a single line as follows. (Originally, it should be possible to confirm the registered content with ```me.read()```, but this operation results in an error.)
 
 ```bash
 P4Runtime sh >>> me = MulticastGroupEntry(1).add(1).add(2).add(3)
 
-P4Runtime sh >>> me.insert()                                                                                                                   
+P4Runtime sh >>> me.insert()
 
-P4Runtime sh >>> me.read()                                                                                                                     
-Out[4]: 
-multicast_group_entry {
-  multicast_group_id: 1
-  replicas {
-    egress_port: 1
-  }
-  replicas {
-    egress_port: 2
-  }
-  replicas {
-    egress_port: 3
-  }
-}
+P4Runtime sh >>> me.read()
+Out[6]: <p4runtime_sh.shell._EntityBase.read.<locals>._EntryIterator at 0x7fffd86bb0a0>
 
 P4Runtime sh >>> 
 ```
 
-#### Mininet operation
+#### Operations on the Mininet side
 
-If you send a ping request with this Multicast Group setting, you can confirm that the ping response is returned anyway.
+With this Multicast Group configured, if you send a ping request, you can confirm that a ping reply is returned.
+
 ```bash
-mininet> h1 ping -c 1 h2       <<<<<< ping from h1 to h2 once
+mininet> h1 ping -c 1 h2       <<<<<< send a single ping from h1 to h2
 PING 10.0.0.2 (10.0.0.2) 56(84) bytes of data.
 64 bytes from 10.0.0.2: icmp_seq=1 ttl=64 time=1.12 ms
 
@@ -74,19 +63,19 @@ rtt min/avg/max/mdev = 1.125/1.125/1.125/0.000 ms
 mininet> 
 ```
 
-However, if you watch the switch port with tcpdump or something, you will see that there are too many packets bouncing back. It is easy to start tcpdump as follows:
+However, at this time, if you monitor the switch ports with tcpdump, you will observe that packets are excessively reflected. It is easy to start tcpdump as follows.
 
 ```bash
-$ docker ps | grep p4mn 
-d481bf29d905        opennetworking/p4mn   "mn --custom bmv2.py…"   6 minutes ago       Up 6 minutes        0.0.0.0:50001->50001/tcp, 50002-50999/tcp   great_carson
-$ docker exec -it d481bf29d905 /bin/bash
-root@d481bf29d905:~# tcpdump -i s1-eth1      <<<< monitor the path between s1 and h1
-tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
-listening on s1-eth1, link-type EN10MB (Ethernet), capture size 262144 bytes
+$ docker ps | grep p4mn
+3d1e484badb8   yutakayasuda/p4mn     "/root/run-p4mn.sh -…"   27 minutes ago   Up 27 minutes   0.0.0.0:50001->50001/tcp, [::]:50001->50001/tcp   kind_gagarin
+$ docker exec -it 3d1e484badb8 /bin/bash
+root@3d1e484badb8:/tmp# tcpdump -i s1-eth1     <<<< monitor the path between s1 and h1
+tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
+listening on s1-eth1, link-type EN10MB (Ethernet), snapshot length 262144 bytes
 (waiting...)
 ```
 
-The monitoring results of each port are shown below. Labels are marked with # at the end of each line.
+The monitoring results for each port are shown below. Labels are added at the end of each line with #.
 
 #####  h1 (s1-eth1)
 
@@ -111,13 +100,13 @@ The monitoring results of each port are shown below. Labels are marked with # at
 11:25:15.982902 IP 10.0.0.2 > 10.0.0.1: ICMP echo reply, id 97, seq 1, length 64 #3-2
 ```
 
-The following sections describe the behavior of the packet in this experiment.
+Next, we explain the packet behavior in this experiment.
 
-### The behavior of the packet
+### Packet Behavior
 
-Look at the ingress processing in nanosw01.p4. default_action is set to flooding. Therefore, since l2_match_table is now empty, all packets are flooded.
+Look at the Ingress processing in nanosw01.p4. The default_action is set to flooding. Since the l2_match_table is currently empty, all packets are processed by flooding.
 
-The flooding() function simply sets standard_metadata.mcast_grp to 1. This will output the packet to all ports registered with multicast_group_id: 1 configured earlier.
+The contents of the flooding() function simply set standard_metadata.mcast_grp to 1. This causes packets to be output to all ports registered in multicast_group_id: 1 configured earlier.
 
 ```C++
     action flooding() {
@@ -140,14 +129,14 @@ The flooding() function simply sets standard_metadata.mcast_grp to 1. This will 
 
 ```
 
-This process causes the following round trips of packets:
+This processing results in the following packet exchanges.
 
-- ping h1 -> h2 causes the first packet (a packet labeled ```#1-1``` to the right of the end of the monitoring result line above) to be observed on the h1-side monitor
--  This packet is replicated to all ports and observed at all interfaces. So, ```#1-1, #2-1, #3-1``` packets are.
-- h2 returns a reply to the ICMP Echo Request. This is ```#2-3```.
--  This packet is replicated to all ports. See; ```#1-3, #2-3, #3-2```.
+- By ping h1 -> h2, the first packet observed on the h1 monitor (labeled #1-1 at the right end of the monitoring results above) is generated
+- This packet is replicated to all ports and observed on all interfaces. That is, packets #1-1, #2-1, #3-1 correspond to this
+- h2 returns a reply to the received ICMP Echo Request. This is #2-3
+- This packet is replicated to all ports. These are #1-3, #2-3, #3-2
 
-The Multicast Group id can be any number other than 1. However, you cannot use 0. A value of 0 means that the output of the packet is not Multicast.
+Note that multicast group id does not have to be 1; other numbers can be used. However, 0 cannot be used. If 0 is set, it means that the packet output is not multicast.
 
 
 
