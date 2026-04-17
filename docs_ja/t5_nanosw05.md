@@ -28,7 +28,7 @@ mininet>
 
 ```python
 P4Runtime sh >>> exit
-$ docker run --platform=linux/amd64 -ti -v /tmp/P4runtime-nanoswitch:/tmp p4lang/p4runtime-sh --grpc-addr 192.168.1.2:50001 --device-id 1 --election-id 0,1 --config /tmp/nanosw05/p4info.txt,/tmp/nanosw05/nanosw05.json
+$ docker run -ti -v /tmp/P4runtime-nanoswitch:/tmp p4lang/p4runtime-sh --grpc-addr 192.168.1.2:50001 --device-id 1 --election-id 0,1 --config /tmp/nanosw05/p4info.txt,/tmp/nanosw05/nanosw05.json
 *** Welcome to the IPython shell for P4Runtime ***
 P4Runtime sh >>>
 ```

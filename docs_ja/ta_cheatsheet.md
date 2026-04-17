@@ -24,7 +24,7 @@ $ mkdir /tmp/P4runtime-nanoswitch
 $ cp -rp nanosw0* /tmp/P4runtime-nanoswitch
 $ ls /tmp/P4runtime-nanoswitch
 nanosw01	nanosw02	nanosw03	nanosw04	nanosw05	nanosw06
-$ docker run --platform=linux/amd64 -ti -v /tmp/P4runtime-nanoswitch:/tmp p4lang/p4runtime-sh --grpc-addr 192.168.1.2:50001 --device-id 1 --election-id 0,1 --config /tmp/nanosw01/p4info.txt,/tmp/nanosw01/nanosw01.json
+$ docker run -ti -v /tmp/P4runtime-nanoswitch:/tmp p4lang/p4runtime-sh --grpc-addr 192.168.1.2:50001 --device-id 1 --election-id 0,1 --config /tmp/nanosw01/p4info.txt,/tmp/nanosw01/nanosw01.json
 *** Welcome to the IPython shell for P4Runtime ***
 P4Runtime sh >>> import sys
 

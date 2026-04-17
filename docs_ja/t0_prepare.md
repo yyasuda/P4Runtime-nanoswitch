@@ -59,7 +59,7 @@ $
 この状態で以下のようにして P4 Runtime Shell を起動します。これは nanosw01 チュートリアルを試す場合です。IPアドレスは自身の環境に合わせて下さい。
 
 ```bash
-$ docker run --platform=linux/amd64 -ti -v /tmp/P4runtime-nanoswitch:/tmp p4lang/p4runtime-sh --grpc-addr 192.168.1.2:50001 --device-id 1 --election-id 0,1 --config /tmp/nanosw01/p4info.txt,/tmp/nanosw01/nanosw01.json
+$ docker run -ti -v /tmp/P4runtime-nanoswitch:/tmp p4lang/p4runtime-sh --grpc-addr 192.168.1.2:50001 --device-id 1 --election-id 0,1 --config /tmp/nanosw01/p4info.txt,/tmp/nanosw01/nanosw01.json
 *** Welcome to the IPython shell for P4Runtime ***
 P4Runtime sh >>>
 ```
@@ -74,7 +74,7 @@ P4Runtime sh >>>
 
 これで準備は完了です。
 
-**ARM Mac 版での注意 : ** Arm 版 Mac で P4 Runtime Shell を動作させるためには、現時点では Rosetta を有効にする必要があります。Dockerhub の設定>>General>>Virtual Machine Options にある「Use Rosetta for x86_64/amd64 emulation on Apple Silicon」にチェックを入れてください。その上で docker コマンドに対して ```$ docker run --platform=linux/amd64 ...``` のように platform オプションを加えてやると良いでしょう。
+** ARM Mac 版での注意 : ** Arm 版 Mac で P4 Runtime Shell を動作させるためには、現時点では Rosetta を有効にする必要があります。Dockerhub の設定>>General>>Virtual Machine Options にある「Use Rosetta for x86_64/amd64 emulation on Apple Silicon」にチェックを入れてください。その上で docker コマンドに対して ```$ docker run --platform=linux/amd64 ...``` のように platform オプションを加えてやると良いでしょう。
 
 ## Next Step
 
